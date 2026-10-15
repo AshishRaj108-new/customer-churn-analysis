@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d3b2e">
+  <title>Customer Churn Analytics | Ashish Raj</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --forest: #0d3b2e;
+      --forest-2: #155540;
+      --green: #16815f;
+      --green-bright: #43cf8c;
+      --red: #c43e32;
+      --amber: #d99012;
+      --ink: #172923;
+      --muted: #6b8178;
+      --line: #dce8e1;
+      --page: #f2f6f3;
+      --card: #fff;
+      --shadow: 0 2px 8px rgba(19, 61, 45, .055);
+    }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--page); }
+    body { margin: 0; color: var(--ink); background: var(--page); font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    button, select { font: inherit; }
+    .app { display: grid; grid-template-columns: 258px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; min-height: 640px; padding: 24px 19px 18px; color: #e8f4ee; background: var(--forest); }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 2px 2px 21px; border-bottom: 1px solid rgba(255,255,255,.12); }
+    .brand-mark { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 12px; color: white; background: #27a873; }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .brand-name { font-size: 14px; font-weight: 720; letter-spacing: .01em; }
+    .brand-owner { margin-top: 2px; color: #90b2a3; font-size: 11px; }
+    .filter-title { margin: 22px 0 13px; color: #87aa9a; font-size: 10px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+    .filter { display: block; margin-bottom: 15px; }
+    .filter label { display: block; margin: 0 0 6px; color: #adc8bb; font-size: 11px; }
+    .filter select { width: 100%; min-height: 39px; padding: 0 31px 0 11px; border: 1px solid rgba(255,255,255,.11); border-radius: 8px; outline: none; color: #eff8f3; background-color: #194d3e; }
+    .filter select:focus-visible, .reset:focus-visible, a:focus-visible { outline: 2px solid #78e6af; outline-offset: 2px; }
+    .filter select option { color: #eff8f3; background: #194d3e; }
+    .reset { width: 100%; min-height: 38px; margin-top: 3px; border: 1px solid rgba(255,255,255,.13); border-radius: 8px; color: #d8e8df; background: rgba(255,255,255,.07); cursor: pointer; transition: background .15s ease; }
+    .reset:hover { background: rgba(255,255,255,.13); }
+    .sidebar-bottom { margin-top: auto; padding: 16px 2px 0; border-top: 1px solid rgba(255,255,255,.12); color: #8eafa0; font-size: 10px; }
+    .sidebar-bottom p { margin: 0 0 5px; }
+    a { color: inherit; }
+    .sidebar-bottom a { color: #75dba5; text-decoration: none; }
+    .sidebar-bottom a:hover, .social a:hover { text-decoration: underline; }
+    .main { min-width: 0; width: 100%; max-width: 1680px; margin: 0 auto; padding: 30px clamp(20px, 3vw, 48px) 22px; }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 126px; padding: 24px 28px; border-left: 4px solid var(--green-bright); border-radius: 13px; color: #f6fbf8; background: linear-gradient(112deg, #0d382b 0%, #155540 72%, #1b684c 100%); box-shadow: var(--shadow); }
+    .eyebrow { margin: 0 0 5px; color: #9ce4be; font-size: 10px; font-weight: 750; letter-spacing: .15em; text-transform: uppercase; }
+    .hero h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(23px, 2.25vw, 31px); font-weight: 600; letter-spacing: -.025em; line-height: 1.2; }
+    .hero-copy { max-width: 730px; margin: 7px 0 0; color: #b7d0c4; font-size: 12px; }
+    .hero-meta { margin: 9px 0 0; color: #5de09a; font-size: 11px; font-weight: 550; }
+    .social { display: flex; flex-shrink: 0; gap: 8px; }
+    .social a { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; color: #f5fbf7; font-size: 11px; text-decoration: none; transition: background .15s ease; }
+    .social a:hover { background: rgba(255,255,255,.1); }
+    .social svg { width: 14px; height: 14px; }
+    .data-state { display: none; margin: 15px 0 0; padding: 13px 15px; border: 1px solid #f0d7aa; border-radius: 9px; color: #714c0e; background: #fff8e9; font-size: 12px; }
+    .data-state.visible { display: block; }
+    .data-state.error { border-color: #ecc6c2; color: #8d2e27; background: #fff3f1; }
+    .currency-note { margin: 13px 0 0; padding: 10px 13px; border: 1px solid #d7e9dd; border-radius: 8px; color: #426653; background: #f0f8f3; font-size: 10px; line-height: 1.5; }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin: 17px 0 24px; }
+    .kpi { min-width: 0; min-height: 126px; padding: 15px 16px 14px; border: 1px solid var(--line); border-top: 3px solid var(--green); border-radius: 10px; background: var(--card); box-shadow: var(--shadow); }
+    .kpi:nth-child(1) { border-top-color: var(--red); }
+    .kpi:nth-child(2) { border-top-color: var(--amber); }
+    .kpi:nth-child(3) { border-top-color: #2589a9; }
+    .kpi:nth-child(4) { border-top-color: var(--green); }
+    .kpi-label { color: #536c61; font-size: 9px; font-weight: 760; letter-spacing: .14em; text-transform: uppercase; }
+    .kpi-value { display: block; overflow: hidden; margin: 5px 0 0; color: #193b2e; font-family: Georgia, "Times New Roman", serif; font-size: clamp(26px, 2.25vw, 34px); font-weight: 650; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
+    .kpi-note { min-height: 17px; margin: 1px 0 0; color: var(--muted); font-size: 10px; }
+    .kpi-tag { display: inline-block; margin-top: 7px; padding: 3px 7px; border-radius: 4px; color: #1b7556; background: #e7f5ed; font-size: 9px; font-weight: 700; }
+    .kpi:nth-child(1) .kpi-tag { color: #a7362b; background: #fff0ed; }
+    .kpi:nth-child(2) .kpi-tag { color: #96600c; background: #fff4df; }
+    .kpi:nth-child(3) .kpi-tag { color: #17627a; background: #e8f6fa; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 22px 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    .section-heading h2 { margin: 0; font-size: 13px; font-weight: 750; letter-spacing: -.01em; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 10px; text-align: right; }
+    .charts { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 13px; }
+    .chart-card { min-width: 0; grid-column: span 6; padding: 16px 16px 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--card); box-shadow: var(--shadow); }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h3 { margin: 0; color: #20392f; font-size: 12px; font-weight: 740; }
+    .chart-note { min-height: 32px; margin: 7px 0 9px; padding: 7px 9px; border-left: 2px solid #55a886; border-radius: 0 5px 5px 0; color: #627d70; background: #eff7f2; font-size: 10px; line-height: 1.45; }
+    .chart-stage { position: relative; height: 235px; }
+    .chart-card.full .chart-stage { height: 255px; }
+    .empty-state { display: grid; place-items: center; width: 100%; height: 100%; padding: 18px; color: #82938b; font-size: 12px; text-align: center; }
+    .empty-state[hidden] { display: none; }
+    .chart-stage canvas[hidden] { display: none; }
+    .table-wrap { overflow: auto; max-height: 295px; border: 1px solid #e3ebe6; border-radius: 7px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+    thead { position: sticky; top: 0; z-index: 1; color: #cce0d5; background: var(--forest); }
+    th { padding: 9px 11px; font-size: 9px; font-weight: 700; letter-spacing: .11em; text-align: left; text-transform: uppercase; }
+    td { padding: 9px 11px; border-bottom: 1px solid #e7eee9; color: #30493d; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #f6faf7; }
+    .rate-cell { display: flex; align-items: center; gap: 8px; min-width: 126px; }
+    .rate-track { overflow: hidden; width: 72px; height: 5px; border-radius: 99px; background: #e9efeb; }
+    .rate-fill { height: 100%; border-radius: inherit; background: var(--red); }
+    .table-empty { padding: 20px; color: #82938b; font-size: 11px; text-align: center; }
+    footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 7px; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); color: #72877c; font-size: 9px; }
+    footer a { color: #39896b; text-decoration: none; }
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 225px minmax(0, 1fr); }
+      .main { padding: 22px 20px; }
+      .hero { padding: 21px; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .social a { padding: 7px 9px; }
+    }
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar { position: static; height: auto; min-height: 0; padding: 15px 16px 13px; }
+      .brand { padding-bottom: 12px; }
+      .filter-title { margin: 12px 0 9px; }
+      .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 11px; }
+      .filter { margin-bottom: 9px; }
+      .filter select { min-height: 36px; }
+      .reset { grid-column: 1 / -1; margin: 0 0 4px; }
+      .sidebar-bottom { display: none; }
+      .main { padding: 16px 14px 19px; }
+      .hero { align-items: flex-start; flex-direction: column; min-height: 0; padding: 19px; }
+      .social { margin-top: 1px; }
+      .chart-card { grid-column: 1 / -1; }
+      .section-heading { align-items: flex-start; flex-direction: column; }
+      .section-heading p { text-align: left; }
+    }
+    @media (max-width: 430px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+      .kpis { gap: 9px; }
+      .kpi { min-height: 120px; padding: 12px 11px; }
+      .kpi-value { font-size: 26px; }
+      .chart-card { padding: 13px 12px 11px; }
+      .chart-stage { height: 215px; }
+      .chart-card.full .chart-stage { height: 230px; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Dashboard filters">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M7 16v-5m5 5V5m5 11V9"/></svg>
+        </div>
+        <div><div class="brand-name">Churn Analytics</div><div class="brand-owner">Ashish Raj</div></div>
+      </div>
+      <div class="filter-title">Filters</div>
+      <div class="filters">
+        <div class="filter"><label for="filter-contract">Contract type</label><select id="filter-contract" aria-label="Filter by contract"><option value="">All contracts</option></select></div>
+        <div class="filter"><label for="filter-internet">Internet service</label><select id="filter-internet" aria-label="Filter by internet service"><option value="">All services</option></select></div>
+        <div class="filter"><label for="filter-payment">Payment method</label><select id="filter-payment" aria-label="Filter by payment method"><option value="">All methods</option></select></div>
+        <div class="filter"><label for="filter-churn">Churn status</label><select id="filter-churn" aria-label="Filter by churn status"><option value="">All customers</option><option value="No">Retained</option><option value="Yes">Churned</option></select></div>
+        <div class="filter"><label for="filter-senior">Senior citizen</label><select id="filter-senior" aria-label="Filter by senior citizen status"><option value="">All customers</option><option value="0">Non-senior</option><option value="1">Senior citizen</option></select></div>
+        <button class="reset" id="reset-filters" type="button">Reset all filters</button>
+      </div>
+      <div class="sidebar-bottom">
+        <p>Dataset: Telco Customer Churn</p>
+        <p id="sidebar-records">Loading customer records…</p>
+        <p><a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">github.com/AshishRaj108-new</a></p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Telco customer retention intelligence</p>
+          <h1>Customer Churn Analytics Dashboard</h1>
+          <p class="hero-copy">Explore observed churn patterns, monthly revenue, and retention segments in the Telco customer dataset.</p>
+          <p class="hero-meta" id="hero-meta">Loading the project dataset…</p>
+        </div>
+        <nav class="social" aria-label="Ashish Raj profiles">
+          <a href="../index.html" aria-label="Back to Ashish Raj's project overview"><span aria-hidden="true">←</span> Project overview</a>
+          <a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer" aria-label="View Ashish Raj's GitHub project">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.68-3.76-1.31-3.76-1.31-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.71 2.61 1.22 3.24.93.1-.72.39-1.22.71-1.5-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.06 1.14a10.65 10.65 0 0 1 5.56 0c2.12-1.44 3.06-1.14 3.06-1.14.61 1.54.23 2.68.11 2.96.72.78 1.16 1.78 1.16 3 0 4.29-2.61 5.24-5.1 5.51.4.35.76 1.03.76 2.08V22c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg>
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/ashish-raj-38b81b253/" target="_blank" rel="noopener noreferrer" aria-label="View Ashish Raj's LinkedIn profile">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 3H3.55C3.25 3 3 3.24 3 3.54v16.92c0 .3.25.54.55.54h16.9c.3 0 .55-.24.55-.54V3.54c0-.3-.25-.54-.55-.54ZM8.34 18.3H5.4V9.75h2.94v8.56ZM6.87 8.58a1.7 1.7 0 1 1 .02-3.4 1.7 1.7 0 0 1-.02 3.4Zm11.43 9.72h-2.94v-4.16c0-.99-.02-2.26-1.38-2.26-1.38 0-1.59 1.08-1.59 2.19v4.23H9.45V9.75h2.82v1.17h.04c.39-.67 1.35-1.38 2.78-1.38 2.97 0 3.52 1.95 3.52 4.48v4.28Z"/></svg>
+            LinkedIn
+          </a>
+        </nav>
+      </header>
+
+      <div class="data-state visible" id="data-state" role="status" aria-live="polite">Loading customer records from the project dataset…</div>
+      <p class="currency-note" role="note">Currency display: INR. The CSV has no currency field, so MonthlyCharges are assumed to be USD and converted at ₹95.07 per $1 (RBI reference rate, 15 Oct 2026). These are converted estimates.</p>
+
+      <section class="kpis" aria-label="Customer retention summary">
+        <article class="kpi"><div class="kpi-label">Churn rate</div><strong class="kpi-value" id="kpi-churn">—</strong><p class="kpi-note" id="kpi-churn-note">Calculating from selected customers</p><span class="kpi-tag">Observed churn</span></article>
+        <article class="kpi"><div class="kpi-label">Monthly revenue at risk</div><strong class="kpi-value" id="kpi-revenue">—</strong><p class="kpi-note" id="kpi-revenue-note">Monthly charges from churned customers</p><span class="kpi-tag">Per month</span></article>
+        <article class="kpi"><div class="kpi-label">Avg charge — churned</div><strong class="kpi-value" id="kpi-average">—</strong><p class="kpi-note" id="kpi-average-note">Compared with retained customers</p><span class="kpi-tag" id="kpi-average-tag">Average monthly charge</span></article>
+        <article class="kpi"><div class="kpi-label">Retained customers</div><strong class="kpi-value" id="kpi-retained">—</strong><p class="kpi-note" id="kpi-retained-note">Customers who stayed</p><span class="kpi-tag" id="kpi-retained-tag">Observed retention</span></article>
+      </section>
+
+      <div class="section-heading"><h2>Churn by customer segment</h2><p>Rates and counts update with the filters.</p></div>
+      <section class="charts" aria-label="Customer segment churn charts">
+        <article class="chart-card"><h3>Churn rate by contract type</h3><p class="chart-note" id="contract-note">Historical churn by contract, calculated from the selected customers.</p><div class="chart-stage"><canvas id="contract-chart" role="img" aria-label="Bar chart of churn rates by contract type"></canvas><div class="empty-state" hidden></div></div></article>
+        <article class="chart-card"><h3>Churn rate by tenure group</h3><p class="chart-note" id="tenure-note">Customer tenure is grouped into four month ranges.</p><div class="chart-stage"><canvas id="tenure-chart" role="img" aria-label="Bar chart of churn rates by customer tenure"></canvas><div class="empty-state" hidden></div></div></article>
+        <article class="chart-card"><h3>Churn rate by payment method</h3><p class="chart-note" id="payment-note">Historical churn by payment method.</p><div class="chart-stage"><canvas id="payment-chart" role="img" aria-label="Bar chart of churn rates by payment method"></canvas><div class="empty-state" hidden></div></div></article>
+        <article class="chart-card"><h3>Internet service and tech support</h3><p class="chart-note">Observed churn rate by internet service and whether tech support is included.</p><div class="chart-stage"><canvas id="support-chart" role="img" aria-label="Grouped bar chart of churn by internet service and tech support"></canvas><div class="empty-state" hidden></div></div></article>
+      </section>
+
+      <div class="section-heading"><h2>Revenue analysis</h2><p>Monthly charges are shown as INR estimates.</p></div>
+      <section class="charts" aria-label="Revenue analysis charts">
+        <article class="chart-card"><h3>Monthly revenue split</h3><p class="chart-note">Churned monthly charges are shown as revenue at risk; retained charges are shown separately, converted to INR.</p><div class="chart-stage"><canvas id="revenue-chart" role="img" aria-label="Doughnut chart of monthly charges for churned and retained customers"></canvas><div class="empty-state" hidden></div></div></article>
+        <article class="chart-card"><h3>Monthly charge distribution — churned vs retained</h3><p class="chart-note">Customer counts by converted INR charge band, split by recorded churn status.</p><div class="chart-stage"><canvas id="charges-chart" role="img" aria-label="Grouped bar chart of monthly charge ranges for churned and retained customers"></canvas><div class="empty-state" hidden></div></div></article>
+      </section>
+
+      <div class="section-heading"><h2>Services and retention priorities</h2><p>These are historical patterns, not model-generated predictions.</p></div>
+      <section class="charts" aria-label="Service analysis and retention priority list">
+        <article class="chart-card full"><h3>Churn rate by number of subscribed services</h3><p class="chart-note">Counted from phone, multiple lines, online security and backup, device protection, tech support, and streaming services.</p><div class="chart-stage"><canvas id="services-chart" role="img" aria-label="Combo chart of churn rate and customer count by number of subscribed services"></canvas><div class="empty-state" hidden></div></div></article>
+        <article class="chart-card full"><h3>Retention priority list</h3><p class="chart-note" id="priority-note">Segments with the highest observed churn rates are listed first. Rates are historical and do not predict individual customers.</p><div class="table-wrap"><table><thead><tr><th scope="col">Contract</th><th scope="col">Payment method</th><th scope="col">Customers</th><th scope="col">Churn rate</th></tr></thead><tbody id="priority-body"><tr><td colspan="4" class="table-empty">Loading observed customer segments…</td></tr></tbody></table></div></article>
+      </section>
+
+      <footer><span>Telco Customer Churn dataset · Values are derived from the project CSV; currency conversion is an estimate.</span><span>Built by Ashish Raj · <a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="https://www.linkedin.com/in/ashish-raj-38b81b253/" target="_blank" rel="noopener noreferrer">LinkedIn</a></span></footer>
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+    const DATA_URL = "../data/WA_Fn-UseC_-Telco-Customer-Churn.csv";
+    const USD_TO_INR = 95.07; // RBI reference rate snapshot for 15 Oct 2026
+    const COLORS = { green: "#16815f", greenSoft: "#69aa8e", red: "#c43e32", amber: "#d99012", ink: "#30493d", muted: "#6b8178", grid: "#e8efea" };
+    const SERVICE_FIELDS = ["PhoneService", "MultipleLines", "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"];
+    const charts = {};
+    let allCustomers = [];
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], field = "", quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '"') {
+          if (quoted && text[i + 1] === '"') { field += '"'; i++; }
+          else quoted = !quoted;
+        } else if (char === "," && !quoted) {
+          row.push(field); field = "";
+        } else if ((char === "\n" || char === "\r") && !quoted) {
+          if (char === "\r" && text[i + 1] === "\n") i++;
+          row.push(field); field = "";
+          if (row.some(value => value.trim() !== "")) rows.push(row);
+          row = [];
+        } else field += char;
+      }
+      if (field.length || row.length) { row.push(field); if (row.some(value => value.trim() !== "")) rows.push(row); }
+      if (rows.length < 2) return [];
+      const headers = rows.shift().map((value, index) => index === 0 ? value.replace(/^\uFEFF/, "").trim() : value.trim());
+      return rows.map(values => Object.fromEntries(headers.map((header, index) => [header, (values[index] || "").trim()])))
+        .map(customer => ({
+          ...customer,
+          tenure: Number(customer.tenure),
+          MonthlyCharges: Number(customer.MonthlyCharges),
+          SeniorCitizen: String(customer.SeniorCitizen),
+          Churn: customer.Churn === "Yes" ? "Yes" : "No"
+        }))
+        .filter(customer => customer.customerID && Number.isFinite(customer.MonthlyCharges));
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+    }
+    function money(value, decimals = 0) {
+      return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format((value || 0) * USD_TO_INR);
+    }
+    function compactMoney(value) {
+      return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", notation: "compact", maximumFractionDigits: 1 }).format((value || 0) * USD_TO_INR);
+    }
+    function percent(value) { return `${(value || 0).toFixed(1)}%`; }
+    function setSelectOptions(id, values, firstLabel) {
+      const select = document.getElementById(id);
+      select.innerHTML = `<option value="">${escapeHTML(firstLabel)}</option>` + values.map(value => `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`).join("");
+    }
+    function selectedCustomers() {
+      const contract = document.getElementById("filter-contract").value;
+      const internet = document.getElementById("filter-internet").value;
+      const payment = document.getElementById("filter-payment").value;
+      const churn = document.getElementById("filter-churn").value;
+      const senior = document.getElementById("filter-senior").value;
+      return allCustomers.filter(customer =>
+        (!contract || customer.Contract === contract) &&
+        (!internet || customer.InternetService === internet) &&
+        (!payment || customer.PaymentMethod === payment) &&
+        (!churn || customer.Churn === churn) &&
+        (!senior || customer.SeniorCitizen === senior)
+      );
+    }
+    function groupRates(customers, getLabel, labels) {
+      const groups = new Map(labels.map(label => [label, { label, total: 0, churned: 0 }]));
+      for (const customer of customers) {
+        const label = getLabel(customer);
+        if (!groups.has(label)) groups.set(label, { label, total: 0, churned: 0 });
+        const group = groups.get(label);
+        group.total++;
+        if (customer.Churn === "Yes") group.churned++;
+      }
+      return [...groups.values()].map(group => ({ ...group, rate: group.total ? group.churned / group.total * 100 : 0 }));
+    }
+    function tenureLabel(months) {
+      if (months <= 12) return "0–12 months";
+      if (months <= 24) return "13–24 months";
+      if (months <= 48) return "25–48 months";
+      return "49–72 months";
+    }
+    function commonChartOptions() {
+      return {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 240 },
+        layout: { padding: { top: 3, right: 5, bottom: 0, left: 1 } },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 15, color: COLORS.muted, font: { size: 10, family: "Inter, system-ui, sans-serif" } } },
+          tooltip: { backgroundColor: "#173c2e", titleFont: { size: 11 }, bodyFont: { size: 10 }, padding: 10, cornerRadius: 7 }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: COLORS.muted, maxRotation: 0, minRotation: 0, font: { size: 9 } } },
+          y: { beginAtZero: true, max: 100, grid: { color: COLORS.grid }, border: { display: false }, ticks: { color: COLORS.muted, font: { size: 9 }, callback: value => `${value}%` } }
+        }
+      };
+    }
+    function createChart(id, config, customers) {
+      const canvas = document.getElementById(id);
+      const empty = canvas.parentElement.querySelector(".empty-state");
+      if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+      if (!customers.length) {
+        canvas.hidden = true; empty.hidden = false; empty.textContent = "No customers match these filters."; return;
+      }
+      if (typeof window.Chart === "undefined") {
+        canvas.hidden = true; empty.hidden = false; empty.textContent = "Chart library unavailable. Check your internet connection and reload."; return;
+      }
+      canvas.hidden = false; empty.hidden = true;
+      charts[id] = new Chart(canvas, config);
+    }
+    function rateColors(groups) {
+      const rates = groups.map(group => group.rate);
+      const high = Math.max(...rates), low = Math.min(...rates);
+      if (high === low) {
+        const color = high >= 50 ? COLORS.red : high <= 10 ? COLORS.green : COLORS.amber;
+        return groups.map(() => color);
+      }
+      return groups.map(group => group.rate === high ? COLORS.red : group.rate === low ? COLORS.green : COLORS.amber);
+    }
+    function rateBar(id, customers, groups, horizontal = false) {
+      const options = commonChartOptions();
+      if (horizontal) {
+        options.indexAxis = "y";
+        options.scales = {
+          x: { beginAtZero: true, max: 100, grid: { color: COLORS.grid }, border: { display: false }, ticks: { color: COLORS.muted, font: { size: 9 }, callback: value => `${value}%` } },
+          y: { grid: { display: false }, border: { display: false }, ticks: { color: COLORS.muted, font: { size: 9 } } }
+        };
+      }
+      options.plugins.legend.display = false;
+      options.plugins.tooltip.callbacks = { label: context => {
+        const group = groups[context.dataIndex];
+        return ` ${percent(group.rate)} churn · ${group.churned.toLocaleString()} of ${group.total.toLocaleString()} customers`;
+      } };
+      createChart(id, { type: "bar", data: { labels: groups.map(group => group.label), datasets: [{ data: groups.map(group => group.rate), backgroundColor: rateColors(groups), borderRadius: 5, borderSkipped: false, maxBarThickness: horizontal ? 24 : 55 }] }, options }, customers);
+    }
+    function renderKpis(customers) {
+      const churned = customers.filter(customer => customer.Churn === "Yes");
+      const retained = customers.filter(customer => customer.Churn === "No");
+      const churnRevenue = churned.reduce((sum, customer) => sum + customer.MonthlyCharges, 0);
+      const avgChurned = churned.length ? churnRevenue / churned.length : null;
+      const avgRetained = retained.length ? retained.reduce((sum, customer) => sum + customer.MonthlyCharges, 0) / retained.length : null;
+      document.getElementById("kpi-churn").textContent = customers.length ? percent(churned.length / customers.length * 100) : "—";
+      document.getElementById("kpi-churn-note").textContent = customers.length ? `${churned.length.toLocaleString()} of ${customers.length.toLocaleString()} customers churned` : "No customers in selected filters";
+      document.getElementById("kpi-revenue").textContent = money(churnRevenue);
+      document.getElementById("kpi-revenue-note").textContent = customers.length ? "Monthly charges from churned customers" : "No monthly revenue in this selection";
+      document.getElementById("kpi-average").textContent = avgChurned === null ? "—" : money(avgChurned, 2);
+      if (avgChurned !== null && avgRetained !== null) {
+        const difference = avgChurned - avgRetained;
+        document.getElementById("kpi-average-note").textContent = `vs ${money(avgRetained, 2)} for retained customers`;
+        document.getElementById("kpi-average-tag").textContent = `${difference >= 0 ? "+" : "−"}${money(Math.abs(difference), 2)} vs retained`;
+      } else {
+        document.getElementById("kpi-average-note").textContent = "Average monthly charge for churned customers";
+        document.getElementById("kpi-average-tag").textContent = avgChurned === null ? "No churned customers" : "No retained comparison";
+      }
+      document.getElementById("kpi-retained").textContent = retained.length.toLocaleString();
+      document.getElementById("kpi-retained-note").textContent = customers.length ? `${percent(retained.length / customers.length * 100)} retention rate` : "No customers in selected filters";
+      document.getElementById("kpi-retained-tag").textContent = "Observed retention";
+    }
+    function renderContract(customers) {
+      const groups = groupRates(customers, customer => customer.Contract, ["Month-to-month", "One year", "Two year"]);
+      rateBar("contract-chart", customers, groups);
+      const present = groups.filter(group => group.total).sort((a, b) => b.rate - a.rate);
+      const note = present.length > 1
+        ? `Highest observed churn: ${present[0].label} at ${percent(present[0].rate)}; lowest: ${present[present.length - 1].label} at ${percent(present[present.length - 1].rate)}.`
+        : "Historical churn by contract, calculated from the selected customers.";
+      document.getElementById("contract-note").textContent = note;
+    }
+    function renderTenure(customers) {
+      const labels = ["0–12 months", "13–24 months", "25–48 months", "49–72 months"];
+      const groups = groupRates(customers, customer => tenureLabel(customer.tenure), labels);
+      rateBar("tenure-chart", customers, groups);
+      const firstYear = groups[0];
+      document.getElementById("tenure-note").textContent = firstYear.total
+        ? `${percent(firstYear.rate)} of customers in the first 12 months churned in this selected cohort (${firstYear.churned.toLocaleString()} of ${firstYear.total.toLocaleString()}).`
+        : "Customer tenure is grouped into four month ranges.";
+    }
+    function renderPayment(customers) {
+      const labels = ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"];
+      const groups = groupRates(customers, customer => customer.PaymentMethod, labels);
+      const display = groups.map(group => ({ ...group, label: group.label.replace(" (automatic)", " (auto)") }));
+      rateBar("payment-chart", customers, display, true);
+      const highest = groups.filter(group => group.total).sort((a, b) => b.rate - a.rate)[0];
+      document.getElementById("payment-note").textContent = highest
+        ? `Highest observed churn by payment method: ${highest.label} at ${percent(highest.rate)} (${highest.churned.toLocaleString()} of ${highest.total.toLocaleString()}).`
+        : "Historical churn by payment method.";
+    }
+    function renderSupport(customers) {
+      const internetLabels = ["Fiber optic", "DSL", "No"];
+      const supportLabels = ["No tech support", "Tech support"];
+      const sets = supportLabels.map(support => groupRates(
+        customers.filter(customer => (customer.TechSupport === "Yes" ? "Tech support" : "No tech support") === support),
+        customer => customer.InternetService, internetLabels
+      ));
+      const options = commonChartOptions();
+      options.plugins.tooltip.callbacks = { label: context => {
+        const group = sets[context.datasetIndex].find(item => item.label === context.label);
+        return group ? ` ${context.dataset.label}: ${percent(group.rate)} · ${group.churned.toLocaleString()} of ${group.total.toLocaleString()}` : " No matching customers";
+      } };
+      createChart("support-chart", { type: "bar", data: { labels: internetLabels, datasets: [
+        { label: "No tech support", data: sets[0].map(group => group.total ? group.rate : null), backgroundColor: COLORS.red, borderRadius: 4, maxBarThickness: 38 },
+        { label: "Tech support", data: sets[1].map(group => group.total ? group.rate : null), backgroundColor: COLORS.green, borderRadius: 4, maxBarThickness: 38 }
+      ] }, options }, customers);
+    }
+    function renderRevenue(customers) {
+      const atRisk = customers.filter(customer => customer.Churn === "Yes").reduce((sum, customer) => sum + customer.MonthlyCharges, 0);
+      const retained = customers.filter(customer => customer.Churn === "No").reduce((sum, customer) => sum + customer.MonthlyCharges, 0);
+      const options = {
+        responsive: true, maintainAspectRatio: false, cutout: "66%",
+        layout: { padding: { top: 3, right: 5, bottom: 0, left: 1 } },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, pointStyle: "circle", boxWidth: 7, boxHeight: 7, padding: 15, color: COLORS.muted, font: { size: 10, family: "Inter, system-ui, sans-serif" } } },
+          tooltip: { backgroundColor: "#173c2e", titleFont: { size: 11 }, bodyFont: { size: 10 }, padding: 10, cornerRadius: 7 }
+        }
+      };
+      options.plugins.tooltip.callbacks = { label: context => ` ${context.label}: ${money(context.raw)}` };
+      createChart("revenue-chart", { type: "doughnut", data: { labels: ["Revenue retained", "Revenue at risk"], datasets: [{ data: [retained, atRisk], backgroundColor: [COLORS.green, COLORS.red], borderColor: "#fff", borderWidth: 3, hoverOffset: 5 }] }, options }, customers);
+    }
+    function renderCharges(customers) {
+      const usdBandEdges = [0, 20, 40, 60, 80, 100, 120];
+      const labels = usdBandEdges.slice(0, -1).map((edge, index) => `${compactMoney(edge)}–${compactMoney(usdBandEdges[index + 1])}`);
+      const retained = Array(labels.length).fill(0), churned = Array(labels.length).fill(0);
+      for (const customer of customers) {
+        const index = Math.min(labels.length - 1, Math.max(0, Math.floor(customer.MonthlyCharges / 20)));
+        (customer.Churn === "Yes" ? churned : retained)[index]++;
+      }
+      const options = commonChartOptions();
+      delete options.scales.y.max;
+      options.scales.y.ticks.callback = value => Number(value).toLocaleString();
+      options.scales.y.title = { display: true, text: "Customers", color: COLORS.muted, font: { size: 9 } };
+      options.plugins.tooltip.callbacks = { label: context => ` ${context.dataset.label}: ${context.raw.toLocaleString()} customers` };
+      createChart("charges-chart", { type: "bar", data: { labels, datasets: [
+        { label: "Retained", data: retained, backgroundColor: COLORS.greenSoft, borderRadius: 3, maxBarThickness: 25 },
+        { label: "Churned", data: churned, backgroundColor: "#d77a70", borderRadius: 3, maxBarThickness: 25 }
+      ] }, options }, customers);
+    }
+    function renderServices(customers) {
+      const withCount = customers.map(customer => ({ ...customer, serviceCount: SERVICE_FIELDS.reduce((count, field) => count + (customer[field] === "Yes" ? 1 : 0), 0) }));
+      const labels = Array.from({ length: SERVICE_FIELDS.length + 1 }, (_, index) => String(index));
+      const groups = groupRates(withCount, customer => String(customer.serviceCount), labels);
+      const options = commonChartOptions();
+      options.scales.y.title = { display: true, text: "Churn rate", color: COLORS.muted, font: { size: 9 } };
+      options.scales.y1 = { position: "right", beginAtZero: true, grid: { drawOnChartArea: false }, border: { display: false }, ticks: { color: COLORS.muted, font: { size: 9 }, precision: 0 }, title: { display: true, text: "Customers", color: COLORS.muted, font: { size: 9 } } };
+      options.plugins.tooltip.callbacks = { label: context => {
+        const group = groups[context.dataIndex];
+        return context.datasetIndex === 0 ? ` Churn: ${percent(group.rate)} · ${group.churned.toLocaleString()} of ${group.total.toLocaleString()}` : ` Customers: ${group.total.toLocaleString()}`;
+      } };
+      createChart("services-chart", { type: "bar", data: { labels, datasets: [
+        { type: "bar", label: "Churn rate", data: groups.map(group => group.rate), yAxisID: "y", backgroundColor: rateColors(groups), borderRadius: 4, maxBarThickness: 54 },
+        { type: "line", label: "Customers", data: groups.map(group => group.total), yAxisID: "y1", borderColor: COLORS.forest, backgroundColor: COLORS.forest, pointBackgroundColor: COLORS.forest, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2, tension: .2 }
+      ] }, options }, customers);
+    }
+    function renderPriority(customers) {
+      const tbody = document.getElementById("priority-body");
+      if (!customers.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No customers match these filters.</td></tr>';
+        document.getElementById("priority-note").textContent = "No observed customer segments match these filters.";
+        return;
+      }
+      const minimum = Math.min(20, Math.max(5, Math.ceil(customers.length * .01)));
+      const groups = new Map();
+      for (const customer of customers) {
+        const key = `${customer.Contract}\u0000${customer.PaymentMethod}`;
+        if (!groups.has(key)) groups.set(key, { contract: customer.Contract, payment: customer.PaymentMethod, total: 0, churned: 0 });
+        const group = groups.get(key); group.total++;
+        if (customer.Churn === "Yes") group.churned++;
+      }
+      const priority = [...groups.values()].filter(group => group.total >= minimum)
+        .map(group => ({ ...group, rate: group.churned / group.total * 100 }))
+        .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 8);
+      document.getElementById("priority-note").textContent = `Highest observed segment churn first; each row has at least ${minimum} customers in this selection. Historical outcomes only, not customer-level predictions.`;
+      if (!priority.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No segments have enough customers in this selection to show a stable rate.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = priority.map(group => `<tr><td>${escapeHTML(group.contract)}</td><td>${escapeHTML(group.payment.replace(" (automatic)", " (auto)"))}</td><td>${group.total.toLocaleString()}</td><td><div class="rate-cell"><span class="rate-track" aria-hidden="true"><span class="rate-fill" style="display:block;width:${Math.max(0, Math.min(100, group.rate))}%"></span></span><strong>${percent(group.rate)}</strong></div></td></tr>`).join("");
+    }
+    function render() {
+      const customers = selectedCustomers();
+      document.getElementById("hero-meta").textContent = `Showing ${customers.length.toLocaleString()} of ${allCustomers.length.toLocaleString()} customers · Dataset: Telco Customer Churn`;
+      document.getElementById("sidebar-records").textContent = `Records: ${allCustomers.length.toLocaleString()} customers`;
+      renderKpis(customers);
+      renderContract(customers);
+      renderTenure(customers);
+      renderPayment(customers);
+      renderSupport(customers);
+      renderRevenue(customers);
+      renderCharges(customers);
+      renderServices(customers);
+      renderPriority(customers);
+    }
+    async function loadData() {
+      const state = document.getElementById("data-state");
+      try {
+        const response = await fetch(DATA_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Dataset request returned ${response.status}`);
+        allCustomers = parseCSV(await response.text());
+        if (!allCustomers.length) throw new Error("The CSV was found, but it did not contain readable customer rows.");
+        setSelectOptions("filter-contract", [...new Set(allCustomers.map(customer => customer.Contract))].sort(), "All contracts");
+        setSelectOptions("filter-internet", [...new Set(allCustomers.map(customer => customer.InternetService))].sort(), "All services");
+        setSelectOptions("filter-payment", [...new Set(allCustomers.map(customer => customer.PaymentMethod))].sort(), "All methods");
+        state.classList.remove("visible", "error"); state.textContent = "";
+        render();
+      } catch (error) {
+        state.classList.add("visible", "error");
+        state.textContent = "Customer data could not be loaded. Start the local web server from the churn-prediction project root and open /docs/ so the dashboard can reach ../data/WA_Fn-UseC_-Telco-Customer-Churn.csv.";
+        document.getElementById("hero-meta").textContent = "Dataset not loaded · No metrics are being shown";
+        document.getElementById("sidebar-records").textContent = "Dataset unavailable";
+        console.error("Could not load the Telco customer CSV:", error);
+      }
+    }
+    document.querySelectorAll(".filter select").forEach(select => select.addEventListener("change", render));
+    document.getElementById("reset-filters").addEventListener("click", () => {
+      document.querySelectorAll(".filter select").forEach(select => { select.value = ""; });
+      render();
+    });
+    loadData();
+  </script>
+</body>
+</html>
