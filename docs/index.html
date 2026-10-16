@@ -963,6 +963,7 @@
     }
     predictionForm.elements.PhoneService.addEventListener("change", syncPredictionServiceValues);
     predictionForm.elements.InternetService.addEventListener("change", syncPredictionServiceValues);
+    let lastSampleCustomerId = null;
     document.getElementById("fill-sample-customer").addEventListener("click", () => {
       const featureFields = [
         "gender", "SeniorCitizen", "Partner", "Dependents", "tenure", "PhoneService",
@@ -971,20 +972,25 @@
         "Contract", "PaperlessBilling", "PaymentMethod", "MonthlyCharges", "TotalCharges"
       ];
       const numericFields = ["tenure", "MonthlyCharges", "TotalCharges"];
-      const sample = allCustomers.find(customer =>
+      const eligibleCustomers = allCustomers.filter(customer =>
         featureFields.every(name => customer[name] !== undefined && String(customer[name]).trim() !== "") &&
         numericFields.every(name => Number.isFinite(Number(customer[name])))
       );
-      if (!sample) {
+      if (!eligibleCustomers.length) {
         setPredictionStatus("No complete customer row is available yet. Wait for the CSV to load, then try again.", "error");
         return;
       }
+      const alternatives = eligibleCustomers.length > 1
+        ? eligibleCustomers.filter(customer => customer.customerID !== lastSampleCustomerId)
+        : eligibleCustomers;
+      const sample = alternatives[Math.floor(Math.random() * alternatives.length)];
+      lastSampleCustomerId = sample.customerID || null;
       featureFields.forEach(name => {
         const field = predictionForm.elements.namedItem(name);
         if (field) field.value = String(sample[name]);
       });
       syncPredictionServiceValues();
-      setPredictionStatus("Loaded one real Telco CSV customer as a demo. Its estimate is not added to dashboard totals.", "success");
+      setPredictionStatus("Loaded a different real Telco CSV customer as a demo. Its estimate is not added to dashboard totals.", "success");
     });
     document.getElementById("prediction-health-check").addEventListener("click", checkPredictionApi);
     predictionForm.addEventListener("submit", submitCustomerPrediction);
