@@ -237,7 +237,7 @@
         </article>
         <article class="feature model-feature">
           <h3>Compare held-out scores</h3>
-          <p>Every model is scored on the same customers. The highest ROC-AUC is selected; F1 breaks ties.</p>
+          <p>Five-fold validation on training data selects the model; untouched test data reports final scores.</p>
           <div class="model-metrics" aria-live="polite">
             <div class="model-metric"><span>Precision</span><strong id="overview-precision">—</strong></div>
             <div class="model-metric"><span>Recall</span><strong id="overview-recall">—</strong></div>
@@ -245,7 +245,7 @@
             <div class="model-metric"><span>ROC-AUC</span><strong id="overview-roc-auc">—</strong></div>
           </div>
           <p class="model-state" id="overview-model-state" role="status" aria-live="polite">Loading model evaluation…</p>
-          <div class="model-comparison-wrap"><table class="model-comparison"><thead><tr><th>Model</th><th>Accuracy</th><th>F1</th><th>ROC-AUC</th></tr></thead><tbody id="overview-model-comparison"><tr><td colspan="4">Loading comparison…</td></tr></tbody></table></div>
+          <div class="model-comparison-wrap"><table class="model-comparison"><thead><tr><th>Model</th><th>CV ROC-AUC</th><th>Test F1</th><th>Test ROC-AUC</th></tr></thead><tbody id="overview-model-comparison"><tr><td colspan="4">Loading comparison…</td></tr></tbody></table></div>
         </article>
         <article class="feature model-feature">
           <h3>Explain the selected model with SHAP</h3>
@@ -366,7 +366,7 @@
         document.getElementById("overview-f1").textContent = asPercent(metrics.f1);
         document.getElementById("overview-roc-auc").textContent = asPercent(metrics.rocAuc);
         state.textContent = comparison.length
-          ? "All models use the same stratified held-out test sample. Selection uses ROC-AUC, with F1 as the tie-breaker."
+          ? "All models use the same split. Five-fold training validation selects the model; the untouched holdout reports final metrics."
           : "Current model scores are shown. Run the updated trainer to generate the three-model comparison.";
         comparisonBody.replaceChildren();
         if (comparison.length) {
@@ -375,9 +375,10 @@
             const selected = Boolean(result.selected || result.model === results.model);
             const row = document.createElement("tr");
             if (selected) row.className = "selected-model";
+            const validation = result.validation || {};
             const values = [
               result.model + (selected ? " · selected" : ""),
-              asPercent(score.accuracy),
+              asPercent(validation.rocAuc),
               asPercent(score.f1),
               asPercent(score.rocAuc)
             ];
