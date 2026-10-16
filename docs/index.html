@@ -78,6 +78,9 @@
     .ml-metric span { display: block; color: var(--muted); font-size: 9px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
     .ml-metric strong { display: block; margin-top: 4px; color: var(--forest); font-size: 20px; font-variant-numeric: tabular-nums; }
     .ml-state { margin: 8px 0; color: var(--muted); font-size: 10px; }
+    .comparison-wrap { margin-top: 9px; }
+    .comparison-selected td { background: #eff8f2; font-weight: 650; }
+    .comparison-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; color: #176b4d; background: #daf1e3; font-size: 9px; font-weight: 750; }
     .ml-reasons { min-width: 260px; max-width: 540px; white-space: normal; line-height: 1.45; }
     .ml-score { color: #9b392e; font-weight: 750; font-variant-numeric: tabular-nums; }
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 22px 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -175,7 +178,7 @@
         <div>
           <p class="eyebrow">Telco customer retention intelligence</p>
           <h1>Customer Churn Analytics Dashboard</h1>
-          <p class="hero-copy">Explore observed churn patterns, monthly revenue, and retention segments in the Telco customer dataset.</p>
+          <p class="hero-copy">Explore Telco churn patterns, compare three machine-learning models, and inspect SHAP explanations for the selected model.</p>
           <p class="hero-meta" id="hero-meta">Loading the project dataset…</p>
         </div>
         <nav class="social" aria-label="Ashish Raj profiles">
@@ -205,7 +208,7 @@
       <section class="charts" aria-label="Machine-learning churn estimates and explanations">
         <article class="chart-card full">
           <h3>Held-out model evaluation</h3>
-          <p class="chart-note">The model was trained on a separate training split. Metrics below describe only the held-out test records and stay fixed when dashboard filters change.</p>
+          <p class="chart-note">Logistic Regression, Random Forest, and Gradient Boosting use the same stratified split. The selected model has the highest held-out ROC-AUC; F1 breaks ties. Scores stay fixed when dashboard filters change.</p>
           <div class="ml-metrics" aria-live="polite">
             <div class="ml-metric"><span>Precision</span><strong id="ml-precision">—</strong></div>
             <div class="ml-metric"><span>Recall</span><strong id="ml-recall">—</strong></div>
@@ -214,6 +217,8 @@
             <div class="ml-metric"><span>Test records</span><strong id="ml-test-count">—</strong></div>
           </div>
           <p class="ml-state" id="ml-state" role="status" aria-live="polite">Loading model results…</p>
+          <div class="table-wrap comparison-wrap"><table><thead><tr><th scope="col">Model</th><th scope="col">Accuracy</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">ROC-AUC</th><th scope="col">Choice</th></tr></thead><tbody id="ml-comparison-body"><tr><td colspan="7" class="table-empty">Loading model comparison…</td></tr></tbody></table></div>
+          <p class="ml-state" id="ml-comparison-note">All three models are evaluated against the same held-out customers.</p>
         </article>
         <article class="chart-card full">
           <h3>Highest model-estimated churn scores</h3>
@@ -519,32 +524,63 @@
       const priority = [...groups.values()].filter(group => group.total >= minimum)
         .map(group => ({ ...group, rate: group.churned / group.total * 100 }))
         .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 8);
-      document.getElementById("priority-note").textContent = `Highest observed segment churn first; each row has at least ${minimum} customers in this selection. Historical outcomes only, not customer-level predictions.`;
-      if (!priority.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No segments have enough customers in this selection to show a stable rate.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = priority.map(group => `<tr><td>${escapeHTML(group.contract)}</td><td>${escapeHTML(group.payment.replace(" (automatic)", " (auto)"))}</td><td>${group.total.toLocaleString()}</td><td><div class="rate-cell"><span class="rate-track" aria-hidden="true"><span class="rate-fill" style="display:block;width:${Math.max(0, Math.min(100, group.rate))}%"></span></span><strong>${percent(group.rate)}</strong></div></td></tr>`).join("");
-    }
-    function renderModelResults(customers) {
+      document.getElementById("pr    function renderModelResults(customers) {
       const state = document.getElementById("ml-state");
       const tbody = document.getElementById("ml-risk-body");
+      const comparisonBody = document.getElementById("ml-comparison-body");
+      const comparisonNote = document.getElementById("ml-comparison-note");
       const metrics = mlResults?.evaluation?.metrics;
       if (!mlResults || !metrics || !Array.isArray(mlResults.predictions)) {
         ["ml-precision", "ml-recall", "ml-f1", "ml-roc-auc", "ml-test-count"].forEach(id => { document.getElementById(id).textContent = "—"; });
         state.textContent = "Model results are unavailable. Run src/train_churn_model.py from the project root to generate docs/data/ml_predictions.json.";
         tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No model predictions are available yet.</td></tr>';
+        comparisonBody.innerHTML = '<tr><td colspan="7" class="table-empty">No model comparison is available yet.</td></tr>';
         return;
       }
-      document.getElementById("ml-precision").textContent = `${(metrics.precision * 100).toFixed(1)}%`;
-      document.getElementById("ml-recall").textContent = `${(metrics.recall * 100).toFixed(1)}%`;
-      document.getElementById("ml-f1").textContent = `${(metrics.f1 * 100).toFixed(1)}%`;
-      document.getElementById("ml-roc-auc").textContent = `${(metrics.rocAuc * 100).toFixed(1)}%`;
+      document.getElementById("ml-precision").textContent = (Number(metrics.precision) * 100).toFixed(1) + "%";
+      document.getElementById("ml-recall").textContent = (Number(metrics.recall) * 100).toFixed(1) + "%";
+      document.getElementById("ml-f1").textContent = (Number(metrics.f1) * 100).toFixed(1) + "%";
+      document.getElementById("ml-roc-auc").textContent = (Number(metrics.rocAuc) * 100).toFixed(1) + "%";
       document.getElementById("ml-test-count").textContent = Number(mlResults.evaluation.testRows).toLocaleString();
-      state.textContent = `${mlResults.model} · ${mlResults.evaluation.method} · Predictions shown here are historical test examples, not live customer forecasts.`;
+      state.textContent = mlResults.model + " selected · " + mlResults.evaluation.method + " · Historical held-out examples, not live forecasts.";
+
+      const comparisons = Array.isArray(mlResults.modelComparison) ? mlResults.modelComparison : [];
+      if (comparisons.length) {
+        comparisonBody.innerHTML = comparisons.map(result => {
+          const score = result.metrics || {};
+          const pct = value => Number.isFinite(Number(value)) ? (Number(value) * 100).toFixed(1) + "%" : "—";
+          const isSelected = Boolean(result.selected || result.model === mlResults.model);
+          return '<tr class="' + (isSelected ? "comparison-selected" : "") + '">' +
+            '<td>' + escapeHTML(result.model || "Model") + '</td>' +
+            '<td>' + pct(score.accuracy) + '</td>' +
+            '<td>' + pct(score.precision) + '</td>' +
+            '<td>' + pct(score.recall) + '</td>' +
+            '<td>' + pct(score.f1) + '</td>' +
+            '<td>' + pct(score.rocAuc) + '</td>' +
+            '<td>' + (isSelected ? '<span class="comparison-badge">Selected</span>' : "Compared") + '</td>' +
+          '</tr>';
+        }).join("");
+        comparisonNote.textContent = "Same train/test split for every model. Selection: " + (mlResults.selectionRule || "highest ROC-AUC; F1 breaks ties.") + " SHAP explanations below are for the selected model.";
+      } else {
+        comparisonBody.innerHTML = '<tr><td colspan="7" class="table-empty">Comparison data has not been generated yet. Run the updated trainer to compare all three models.</td></tr>';
+        comparisonNote.textContent = "The displayed evaluation is from the existing model results. Re-run src/train_churn_model.py in the project folder to create the three-model comparison.";
+      }
 
       const selectedIds = new Set(customers.map(customer => customer.customerID));
       const topRows = mlResults.predictions
+        .filter(row => selectedIds.has(row.customerID))
+        .sort((a, b) => b.churnProbability - a.churnProbability)
+        .slice(0, 10);
+      if (!topRows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No held-out test records match these filters.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = topRows.map(row => {
+        const reasons = (row.topReasons || []).map(reason => reason.feature + ": " + reason.value + " (" + reason.direction + " model-estimated risk)").join("; ");
+        return '<tr><td>' + escapeHTML(row.customerID) + '</td><td class="ml-score">' + percent(row.churnProbability * 100) + '</td><td>' + escapeHTML(row.predictedChurn) + '</td><td>' + escapeHTML(row.observedChurn) + '</td><td class="ml-reasons">' + escapeHTML(reasons || "No explanation available") + '</td></tr>';
+      }).join("");
+    }
+.predictions
         .filter(row => selectedIds.has(row.customerID))
         .sort((a, b) => b.churnProbability - a.churnProbability)
         .slice(0, 10);
