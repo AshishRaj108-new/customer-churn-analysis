@@ -92,6 +92,23 @@
     .prediction-help, .prediction-status { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
     .prediction-status.error { color: var(--red); }
     .prediction-status.success { color: #16704d; }
+    .chat-log { display: flex; flex-direction: column; gap: 8px; max-height: 330px; overflow: auto; margin-top: 11px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #f8fbf9; }
+    .chat-bubble { max-width: min(88%, 760px); padding: 9px 12px; border-radius: 10px; color: #29483a; background: #e8f4ed; font-size: 11px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .chat-bubble.user { align-self: flex-end; color: #fff; background: var(--forest-2); }
+    .chat-bubble.assistant { align-self: flex-start; }
+    .chat-prompts { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .chat-prompts button { padding: 6px 9px; border: 1px solid #cfe1d5; border-radius: 999px; color: #286247; background: #fff; font-size: 10px; cursor: pointer; }
+    .chat-prompts button:hover { background: #edf7f0; }
+    .chat-prompts button:focus-visible, .chat-form textarea:focus-visible { outline: 2px solid #16815f; outline-offset: 2px; }
+    .chat-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 9px; margin-top: 11px; }
+    .chat-form label { display: block; margin-bottom: 5px; color: var(--ink); font-size: 10px; font-weight: 700; }
+    .chat-form textarea { display: block; width: 100%; min-height: 72px; padding: 9px 10px; resize: vertical; border: 1px solid #cbdcd2; border-radius: 7px; color: var(--ink); background: #fff; font: inherit; font-size: 11px; }
+    .chat-form button:disabled { opacity: .6; cursor: wait; }
+    .chat-status { min-height: 15px; margin: 7px 0 0; color: var(--muted); font-size: 10px; }
+    .chat-status.error { color: var(--red); }
+    .chat-status.success { color: #16704d; }
+    .chat-privacy { margin: 8px 0 0; color: #75867e; font-size: 9px; line-height: 1.5; }
+    .chat-privacy a { color: #39896b; }
     .prediction-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; margin: 18px 0 14px; }
     .prediction-group-label { grid-column: 1 / -1; margin: 5px 0 -3px; padding-bottom: 6px; border-bottom: 1px solid var(--line); color: var(--forest); font-size: 10px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
     .prediction-field { display: block; min-width: 0; }
@@ -153,6 +170,8 @@
       .prediction-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .prediction-reasons { grid-template-columns: 1fr; }
       .prediction-api-row { grid-template-columns: 1fr; }
+      .chat-form { grid-template-columns: 1fr; }
+      .chat-log { max-height: 260px; }
       .app { display: block; }
       .sidebar { position: static; height: auto; min-height: 0; padding: 15px 16px 13px; }
       .brand { padding-bottom: 12px; }
@@ -214,7 +233,7 @@
         <div>
           <p class="eyebrow">Telco customer retention intelligence</p>
           <h1>Customer Churn Analytics Dashboard</h1>
-          <p class="hero-copy">Explore Telco churn patterns, compare three machine-learning models, and inspect SHAP explanations for the selected model.</p>
+          <p class="hero-copy">Explore Telco churn patterns, compare three machine-learning models, inspect SHAP explanations, and ask the AI churn assistant.</p>
           <p class="hero-meta" id="hero-meta">Loading the project dataset…</p>
         </div>
         <nav class="social" aria-label="Ashish Raj profiles">
@@ -300,6 +319,30 @@
             <h4>Leading SHAP factors</h4><ul class="prediction-reasons" id="prediction-reasons"></ul>
             <p class="prediction-help">The score is a model estimate, not a promise of what a customer will do. SHAP factors describe associations learned by this model; they do not prove cause. Impact values are in model-score units.</p>
           </div>
+        </article>
+      </section>
+
+      <section class="charts" id="ai-churn-chat" aria-labelledby="ai-chat-title">
+        <article class="chart-card full">
+          <h3 id="ai-chat-title">AI Churn Assistant</h3>
+          <p class="chart-note">Ask about the full historical dataset, model comparison, or the latest single-customer estimate on this page. Answers use dataset summaries and model results; they do not change the prediction or dashboard filters.</p>
+          <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions">
+            <div class="chat-bubble assistant">Hi! Ask me about churn patterns, the three model results, or why the latest customer estimate received its score.</div>
+          </div>
+          <div class="chat-prompts" aria-label="Example questions">
+            <button type="button" data-chat-prompt="Which contract type has the highest churn rate?">Churn by contract</button>
+            <button type="button" data-chat-prompt="Explain the latest customer's prediction using its SHAP factors.">Explain latest estimate</button>
+            <button type="button" data-chat-prompt="How were the three models compared and selected?">Compare the models</button>
+          </div>
+          <form class="chat-form" id="chat-form">
+            <div>
+              <label for="chat-input">Ask a question</label>
+              <textarea id="chat-input" name="message" maxlength="500" rows="3" required placeholder="For example: Which payment method is linked with the highest historical churn?"></textarea>
+            </div>
+            <button type="submit" class="prediction-button" id="chat-submit">Ask AI</button>
+          </form>
+          <p class="chat-status" id="chat-status" role="status" aria-live="polite">The assistant uses the shared Render API.</p>
+          <p class="chat-privacy">Your question, recent chat turns, and—if available—the latest prediction score and top SHAP factors are sent to Google Gemini. The Gemini free tier may use prompts to improve Google products. Do not enter names, emails, phone numbers, account numbers, or other private customer details. This dashboard does not save chat history. <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer">Gemini data and pricing details</a>.</p>
         </article>
       </section>
 
@@ -738,6 +781,7 @@
         const result = await response.json();
         if (!response.ok || result.status !== "ready") throw new Error(result.message || "The model is not ready.");
         setPredictionStatus("Connected · " + result.model + " is ready for a new customer estimate.", "success");
+        setChatStatus(result.chatReady ? "AI chat is ready for this public dashboard." : "Prediction API is connected. The owner still needs to add the Gemini key in Render to activate AI chat.", result.chatReady ? "success" : "");
         return true;
       } catch (error) {
         setPredictionStatus(error.message || "Could not reach the API. Confirm it is running and allows this page.", "error");
@@ -747,6 +791,7 @@
       }
     }
     function showPrediction(result) {
+      latestPredictionContext = { model: result.model, probability: Number(result.probability), predictedChurn: result.predictedChurn, reasons: (result.reasons || []).slice(0, 5) };
       const probability = Math.max(0, Math.min(1, Number(result.probability)));
       const percentValue = probability * 100;
       document.getElementById("prediction-result").hidden = false;
@@ -813,6 +858,76 @@
         button.disabled = false;
       }
     }
+    let latestPredictionContext = null;
+    const chatHistory = [];
+    const chatLog = document.getElementById("chat-log");
+    const chatForm = document.getElementById("chat-form");
+    const chatInput = document.getElementById("chat-input");
+    const chatSubmit = document.getElementById("chat-submit");
+
+    function setChatStatus(message, kind = "") {
+      const status = document.getElementById("chat-status");
+      status.textContent = message;
+      status.className = "chat-status" + (kind ? " " + kind : "");
+    }
+    function addChatBubble(role, message) {
+      const bubble = document.createElement("div");
+      bubble.className = "chat-bubble " + role;
+      bubble.textContent = message;
+      chatLog.append(bubble);
+      while (chatLog.children.length > 21) chatLog.removeChild(chatLog.children[1]);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+    async function submitChat(event) {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      const base = predictionApiBase();
+      if (!base) {
+        setChatStatus("The hosted API address is missing. Reload the public dashboard and try again.", "error");
+        return;
+      }
+      const typedHttp = window.location.protocol === "https:" && base.startsWith("http://");
+      if (typedHttp) {
+        setChatStatus("This public page needs an HTTPS API address.", "error");
+        return;
+      }
+
+      chatSubmit.disabled = true;
+      addChatBubble("user", message);
+      chatInput.value = "";
+      setChatStatus("Gemini is checking the project facts and preparing an answer…");
+      try {
+        const response = await fetch(base + "/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message,
+            history: chatHistory.slice(-6),
+            prediction: latestPredictionContext
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.detail || ("Chat request returned " + response.status));
+        const answer = String(result.answer || "").trim();
+        if (!answer) throw new Error("The assistant returned an empty answer. Please try again.");
+        addChatBubble("assistant", answer);
+        chatHistory.push({ role: "user", text: message }, { role: "model", text: answer });
+        if (chatHistory.length > 12) chatHistory.splice(0, chatHistory.length - 12);
+        setChatStatus("Answered using the project dataset summary and model results.", "success");
+      } catch (error) {
+        setChatStatus(error.message || "Could not reach the AI assistant. Check the Render service and try again.", "error");
+      } finally {
+        chatSubmit.disabled = false;
+        chatInput.focus();
+      }
+    }
+    chatForm.addEventListener("submit", submitChat);
+    document.querySelectorAll("[data-chat-prompt]").forEach(button => button.addEventListener("click", () => {
+      chatInput.value = button.dataset.chatPrompt || "";
+      chatInput.focus();
+    }));
+
     const predictionApiUrl = document.getElementById("prediction-api-url");
     if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
       predictionApiUrl.value = "http://127.0.0.1:8000";
