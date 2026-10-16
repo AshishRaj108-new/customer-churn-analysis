@@ -28,7 +28,13 @@
     .hero-shell { position: relative; overflow: hidden; color: #eff8f2; background: radial-gradient(ellipse at 84% 35%, rgba(39, 137, 94, .28), transparent 38%), linear-gradient(135deg, #0b3026 0%, #104837 62%, #0a3829 100%); }
     .hero-shell::before { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 48px 48px; content: ""; mask-image: linear-gradient(90deg, #000, transparent 90%); pointer-events: none; }
     .nav-shell { position: sticky; top: 0; z-index: 20; color: #eff8f2; background: rgba(11,48,38,.97); box-shadow: 0 5px 18px rgba(5,24,18,.12); backdrop-filter: blur(12px); }
-    .section[id], .dashboard-section[id] { scroll-margin-top: 92px; }
+    .section[id], .dashboard-section[id] { scroll-margin-top: 96px; }
+    .architecture-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 12px; margin-top: 16px; }
+    .architecture-step { padding: 15px; border: 1px solid var(--line); border-radius: 9px; background: #f7fbf8; }
+    .architecture-step small { display: block; margin-bottom: 5px; color: var(--green-ink); font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .architecture-step strong { display: block; color: #234936; font-size: 12px; }
+    .architecture-step p { margin: 5px 0 0; color: #6b8075; font-size: 10px; }
+    @media (max-width: 540px) { .architecture-flow { grid-template-columns: 1fr; } }
     .topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 78px; border-bottom: 1px solid rgba(255,255,255,.12); }
     .brand { display: inline-flex; align-items: center; gap: 11px; color: #eff8f2; font-size: 14px; font-weight: 750; text-decoration: none; }
     .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(111,233,164,.4); border-radius: 10px; color: #83e2ac; background: rgba(71,185,123,.15); }
@@ -167,8 +173,11 @@
       </a>
       <nav class="nav" aria-label="Main navigation">
         <a href="#overview">Overview</a>
-        <a href="#machine-learning">AI &amp; ML</a>
+        <a href="#machine-learning">Models</a>
+        <a href="#individual-prediction">Prediction</a>
+        <a href="#ai-assistant">AI assistant</a>
         <a href="#dashboard">Dashboard</a>
+        <a href="#technology-stack">Tech stack</a>
         <a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a class="nav-cta" href="docs/index.html">Open dashboard <span aria-hidden="true">↗</span></a>
       </nav>
@@ -198,13 +207,13 @@
     <div class="wrap stats" aria-label="Summary calculated from the project dataset">
       <div class="stat"><strong class="stat-value" id="stat-customers">—</strong><span class="stat-label">Customer records</span></div>
       <div class="stat"><strong class="stat-value" id="stat-churn">—</strong><span class="stat-label">Observed churn rate</span></div>
-      <div class="stat"><strong class="stat-value" id="stat-risk">—</strong><span class="stat-label">Monthly charges at risk · INR est.</span></div>
+      <div class="stat"><strong class="stat-value" id="stat-risk">—</strong><span class="stat-label">Churned monthly charges · CSV units</span></div>
     </div>
     <div class="hero-bottom" aria-hidden="true"></div>
   </header>
 
   <main>
-    <p class="wrap currency-note" id="currency-note">INR estimate uses ₹95.07 per USD (15 Oct 2026). The source CSV has no currency field; charges are assumed to be USD for display.</p>
+    <p class="wrap currency-note" id="currency-note">Charge amounts use the Telco CSV's numeric units. The source file does not specify a currency, so no currency conversion is applied.</p>
 
     <section class="wrap section" id="overview" aria-labelledby="overview-title">
       <div class="section-head">
@@ -221,7 +230,7 @@
         <article class="feature">
           <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18m5-14.5c-.8-1-2.1-1.5-4-1.5-2.2 0-3.8 1.1-3.8 2.8 0 4.4 7.8 1.8 7.8 6.2 0 1.8-1.7 3-4.1 3-1.8 0-3.4-.6-4.4-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
           <h3>Review monthly charges</h3>
-          <p>Estimate monthly charges associated with churned customers. The dashboard labels the USD assumption and INR conversion rate.</p>
+          <p>Sum the MonthlyCharges values for records marked churned, in the source CSV's numeric units. The dataset does not declare a currency, so no conversion is applied.</p>
         </article>
         <article class="feature">
           <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v4H5zm0 10h14v4H5zm3-8h.01M8 17h.01M12 7h4m-4 10h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -254,7 +263,7 @@
             <div class="model-metric"><span>ROC-AUC</span><strong id="overview-roc-auc">—</strong></div>
           </div>
           <p class="model-state" id="overview-model-state" role="status" aria-live="polite">Loading model evaluation…</p>
-          <div class="model-comparison-wrap"><table class="model-comparison"><thead><tr><th>Model</th><th>CV ROC-AUC</th><th>Test F1</th><th>Test ROC-AUC</th></tr></thead><tbody id="overview-model-comparison"><tr><td colspan="4">Loading comparison…</td></tr></tbody></table></div>
+          <div class="model-comparison-wrap"><table class="model-comparison"><thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Test ROC-AUC</th><th>5-fold CV ROC-AUC</th></tr></thead><tbody id="overview-model-comparison"><tr><td colspan="7">Loading comparison…</td></tr></tbody></table></div>
         </article>
         <article class="feature model-feature">
           <h3>Explain the selected model with SHAP</h3>
@@ -273,18 +282,89 @@
       <p class="section-head" style="margin-top:12px">To try it locally, run <code>python src/train_churn_model.py</code>, then start the API in a second terminal with <code>python -m uvicorn src.api:app --reload --port 8000</code>. The public dashboard uses the shared Render API; add a Gemini key in Render to activate chat for every visitor. The setup guide shows each step. <a href="docs/API_SETUP.md">Open the beginner setup guide</a>.</p>
     </section>
 
+    <section class="wrap section" id="individual-prediction" aria-labelledby="prediction-overview-title">
+      <div class="section-head">
+        <p class="section-kicker">Individual customer estimate</p>
+        <h2 id="prediction-overview-title">Try a separate churn estimate for one customer</h2>
+        <p>The dashboard can score one customer's service details through the public API. This estimate is separate from the historical charts and is not added to dataset totals.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>Fill a real sample</h3>
+          <p>“Fill sample customer” selects a complete real row from the Telco CSV and fills the form. Clicking again chooses a different row. You can also enter a customer's service details yourself.</p>
+        </article>
+        <article class="feature">
+          <h3>Get a model score</h3>
+          <p>Submit the form to the selected Gradient Boosting model. It returns an estimated churn probability and a Yes/No label at the 50% threshold. Charges use CSV numeric units.</p>
+        </article>
+        <article class="feature">
+          <h3>Read the SHAP reasons</h3>
+          <p>The result lists leading factors that raised or lowered that model score. They explain learned associations; they do not prove why a customer will leave.</p>
+        </article>
+      </div>
+      <div class="dashboard-card model-cta">
+        <div>
+          <p class="section-kicker">No API setup for visitors</p>
+          <h2>Use the shared Render service</h2>
+          <p>The GitHub Pages dashboard sends the entered service fields to the project's FastAPI service at <code>ashish-customer-churn-api.onrender.com</code>. Visitors do not need a Gemini key or a local VS Code server. The form does not save the estimate.</p>
+        </div>
+        <a class="button button-primary" href="docs/index.html#predict-customer">Open the estimate form <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="wrap section" id="ai-assistant" aria-labelledby="assistant-overview-title">
+      <div class="section-head">
+        <p class="section-kicker">Generative AI assistant</p>
+        <h2 id="assistant-overview-title">Ask questions about the project in the dashboard</h2>
+        <p>The Gemini-powered assistant is connected through the same shared Render API. It answers from the dataset summary, model comparison, and—when available—the latest one-customer estimate and its SHAP factors.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <h3>What it can explain</h3>
+          <p>Ask about churn patterns, customer groups, the three model scores, SHAP drivers, or the estimate most recently made in your browser.</p>
+        </article>
+        <article class="feature">
+          <h3>How the connection works</h3>
+          <p>GitHub Pages serves the dashboard; Render runs FastAPI; FastAPI calls the churn model for estimates and Gemini for chat. The Gemini key stays in Render's private environment settings.</p>
+        </article>
+        <article class="feature">
+          <h3>Privacy and availability</h3>
+          <p>The dashboard does not save chat history. A question and recent turns, plus the latest score and top SHAP factors when provided, are sent to Gemini. Do not enter names, emails, phone numbers, or account numbers. Render's free service may need time to wake after inactivity.</p>
+        </article>
+      </div>
+      <p class="model-cta"><a href="docs/API_SETUP.md">Read the API setup and privacy guide</a> · <a href="https://ashish-customer-churn-api.onrender.com/health" target="_blank" rel="noopener noreferrer">Check the public API status</a></p>
+    </section>
+
     <section class="wrap dashboard-section" id="dashboard" aria-labelledby="dashboard-title">
       <div class="dashboard-card">
         <div>
           <p class="section-kicker">Dashboard</p>
           <h2 id="dashboard-title">Explore the customer churn dashboard</h2>
-          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The shared Render API powers single-customer predictions and a Gemini chatbot that answers questions using project dataset summaries, model results, and SHAP factors.</p>
+          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. Explore churn by contract, tenure, payment method, internet service and tech support; monthly-charge patterns and splits; service add-ons; and the retention priority list. Single-customer estimates and the Gemini assistant use the shared Render API.</p>
         </div>
         <a class="button button-primary" href="docs/index.html">Open dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
     </section>
 
     <div class="contents">
+      <section class="wrap section" id="technology-stack" aria-labelledby="technology-stack-title">
+        <div class="section-head">
+          <p class="section-kicker">Technology stack and system flow</p>
+          <h2 id="technology-stack-title">How the project is put together</h2>
+          <p>Machine learning creates the customer risk estimate, SHAP helps explain it, and Gemini provides natural-language answers about the supplied project facts.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature"><h3>Dashboard and charts</h3><p><strong>HTML, CSS, JavaScript, Chart.js</strong><br>Responsive pages, filters, historical visualizations, the customer form, and chatbot interface.</p></article>
+          <article class="feature"><h3>Data and machine learning</h3><p><strong>Python, pandas, scikit-learn</strong><br>Telco CSV processing and a comparison of Logistic Regression, Random Forest, and Gradient Boosting.</p></article>
+          <article class="feature"><h3>Explainability and generative AI</h3><p><strong>SHAP and Google Gemini API</strong><br>SHAP explains model-score factors. Gemini answers questions from the project context; it does not train or replace the churn model.</p></article>
+        </div>
+        <div class="architecture-flow" aria-label="Project request flow">
+          <div class="architecture-step"><small>1 · Website</small><strong>GitHub Pages</strong><p>Hosts this project overview and the public dashboard.</p></div>
+          <div class="architecture-step"><small>2 · Backend</small><strong>Render · FastAPI</strong><p>Receives dashboard requests at <code>/predict</code> and <code>/chat</code>.</p></div>
+          <div class="architecture-step"><small>3 · Services</small><strong>Model, SHAP, Gemini</strong><p>Returns a churn score with explanations or an answer about supplied project facts.</p></div>
+        </div>
+      </section>
+
       <section class="wrap section" id="project-files" aria-labelledby="contents-title">
         <div class="section-head">
           <p class="section-kicker">Project files</p>
@@ -313,8 +393,7 @@
 
   <script>
     "use strict";
-    const USD_TO_INR = 95.07;
-    const compactINR = value => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", notation: "compact", maximumFractionDigits: 1 }).format(value * USD_TO_INR);
+    const compactCharge = value => new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 
     function parseCSV(text) {
       const rows = [];
@@ -351,7 +430,7 @@
         const chargesAtRisk = churned.reduce((sum, customer) => sum + Number(customer.MonthlyCharges), 0);
         document.getElementById("stat-customers").textContent = customers.length.toLocaleString("en-IN");
         document.getElementById("stat-churn").textContent = `${(churned.length / customers.length * 100).toFixed(1)}%`;
-        document.getElementById("stat-risk").textContent = compactINR(chargesAtRisk);
+        document.getElementById("stat-risk").textContent = compactCharge(chargesAtRisk);
       } catch (error) {
         note.textContent = "Dataset summary is unavailable. Open this page through the project web server to load the CSV; the dashboard can still be opened below.";
       }
@@ -376,7 +455,7 @@
         document.getElementById("overview-f1").textContent = asPercent(metrics.f1);
         document.getElementById("overview-roc-auc").textContent = asPercent(metrics.rocAuc);
         state.textContent = comparison.length
-          ? "All models use the same split. Five-fold training validation selects the model; the untouched holdout reports final metrics."
+          ? "All three models use the same stratified split. The highest mean 5-fold training ROC-AUC selects the model (mean F1 breaks ties); the untouched holdout reports final scores."
           : "Current model scores are shown. Run the updated trainer to generate the three-model comparison.";
         comparisonBody.replaceChildren();
         if (comparison.length) {
@@ -388,9 +467,12 @@
             const validation = result.validation || {};
             const values = [
               result.model + (selected ? " · selected" : ""),
-              asPercent(validation.rocAuc),
+              asPercent(score.accuracy),
+              asPercent(score.precision),
+              asPercent(score.recall),
               asPercent(score.f1),
-              asPercent(score.rocAuc)
+              asPercent(score.rocAuc),
+              asPercent(validation.rocAuc)
             ];
             values.forEach(value => {
               const cell = document.createElement("td");
@@ -402,7 +484,7 @@
         } else {
           const row = document.createElement("tr");
           const cell = document.createElement("td");
-          cell.colSpan = 4;
+          cell.colSpan = 7;
           cell.textContent = "Comparison appears after running the updated trainer.";
           row.append(cell);
           comparisonBody.append(row);
@@ -429,7 +511,7 @@
         comparisonBody.replaceChildren();
         const row = document.createElement("tr");
         const cell = document.createElement("td");
-        cell.colSpan = 4;
+        cell.colSpan = 7;
         cell.textContent = "Model comparison unavailable.";
         row.append(cell);
         comparisonBody.append(row);
