@@ -1,43 +1,40 @@
-# Run the single-customer prediction locally
+# Single-customer prediction setup
 
-The dashboard on GitHub Pages is a static website. Python model predictions run in a small API service, so run both the dashboard and the API for a local demo.
+The dashboard is hosted on GitHub Pages. A Python API handles the model prediction. For local use, run the dashboard server and API on your computer. For the public dashboard, deploy the API to Render so VS Code does not need to stay open.
 
-## 1. Open a terminal at the project root
+## Use it locally
 
-This is the folder containing `src`, `docs`, `data`, and `requirements.txt`. Activate the project's virtual environment if it is not active yet.
+1. Open a terminal in the project root, the folder containing `src`, `docs`, `data`, and `requirements.txt`. Activate your virtual environment.
+2. Pull the latest project files, then train the model:
 
-## 2. Train and save the model
+   ```bash
+   git pull origin main
+   python src/train_churn_model.py
+   ```
 
-Run:
+   The trainer writes the evaluation data to `docs/data/ml_predictions.json` and saves the selected model to `models/churn_live_model.joblib`.
 
-```bash
-python src/train_churn_model.py
-```
+3. In a second terminal at the same project root, start the API:
 
-This compares Logistic Regression, Random Forest, and Gradient Boosting, writes the evaluation data to `docs/data/ml_predictions.json`, and saves the selected fitted model to `models/churn_live_model.joblib`. The model file stays on your computer and is excluded from Git.
+   ```bash
+   python -m uvicorn src.api:app --reload --port 8000
+   ```
 
-## 3. Start the prediction API in a second terminal
+4. Keep the API and the local dashboard server running. Open `http://127.0.0.1:8765/docs/index.html#predict-customer`, click **Check connection**, fill the customer details, and click **Estimate churn risk**.
 
-Keep the first terminal open. Open another terminal at the project root, activate the same virtual environment, and run:
+The prediction appears separately from the historical charts and the entered customer details are not saved by this project.
 
-```bash
-python -m uvicorn src.api:app --reload --port 8000
-```
+## Keep the public dashboard working without VS Code
 
-Leave this terminal running. The API address is `http://127.0.0.1:8000`.
+A GitHub Pages site cannot run Python. This repository includes a Render Blueprint (`render.yaml`) that describes a free Python API service. Render builds the model from the CSV when deploying, then serves the API over HTTPS.
 
-## 4. Open the dashboard and make a separate prediction
+1. Sign in to [Render](https://dashboard.render.com/) using your GitHub account.
+2. In Render, choose **New → Blueprint** and connect `AshishRaj108-new/customer-churn-analysis` on the `main` branch.
+3. Review the service named `ashish-customer-churn-api`; make sure its plan is **Free**, then choose **Deploy Blueprint**.
+4. Wait for the build to finish. It installs the small API dependency list and runs the three-model trainer to create the selected model for the API.
+5. Open the deployed service and copy its HTTPS address, for example `https://ashish-customer-churn-api.onrender.com`. Use the exact address shown in your Render dashboard.
+6. Open the GitHub Pages dashboard, go to the one-customer form, paste that base address into **Prediction API address** (do not add `/health` or `/predict`), then click **Check connection**.
 
-Serve the project files over HTTP as you already do, then open:
+The API already allows requests from `https://ashishraj108-new.github.io`. Render's free service sleeps after 15 minutes with no incoming traffic; the first request after it sleeps can take about one minute to wake it. This means VS Code can be closed after deployment, but the first prediction after a quiet period may be slow. Free instances are intended for demos and hobby projects, not production.
 
-`http://127.0.0.1:8765/docs/index.html#predict-customer`
-
-The dashboard fills in the local API address when opened on `localhost` or `127.0.0.1). Click **Check connection**, enter the customer's service details, then click **Estimate churn risk**. The answer appears in the single-customer card and does not change or get added to the historical charts.
-
-If your dashboard server uses another local port, the API allows localhost addresses on any port. Keep the page and API terminals running while using the form.
-
-## Using the public GitHub Pages dashboard
-
-The public page cannot run Python by itself. To make the form work for everyone on GitHub Pages, the API must also be deployed to a host that provides an HTTPS address. Enter that address in **Prediction API address** on the dashboard. The API host must allow the website origin `https://ashishraj108-new.github.io`; the service supports the `CHURN_ALLOWED_ORIGINS` environment variable for extra allowed origins.
-
-No public API address is configured yet, so the live dashboard will show the form and explain how to connect it, while historical charts continue to work normally.
+For the exact service setup behavior and current free-tier limits, see [Render's FastAPI deployment guide](https://render.com/docs/deploy-fastapi), [Blueprint setup guide](https://render.com/docs/infrastructure-as-code), and [free service limits](https://render.com/docs/free).
