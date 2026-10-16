@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b3026">
-  <meta name="description" content="Ashish Raj's Telco customer churn project with an interactive dashboard, Logistic Regression model, and SHAP explanations.">
+  <meta name="description" content="Ashish Raj's Telco churn project with a three-model comparison, SHAP explanations, individual prediction, and a Gemini-powered dashboard chatbot.">
   <title>Customer Churn Analysis | Ashish Raj</title>
   <style>
     :root {
@@ -181,7 +181,7 @@
       <div>
         <p class="eyebrow">Customer analytics · End-to-end project</p>
         <h1>Customer Churn <em>Analysis</em></h1>
-        <p class="hero-copy">Explore why telecom customers leave through historical data analysis, a trained churn prediction model, and SHAP explanations that show which recorded factors shaped a model score.</p>
+        <p class="hero-copy">Explore telecom churn patterns with historical data analysis, three compared machine-learning models, SHAP explanations, individual customer estimates, and a Gemini-powered dashboard chatbot.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="docs/index.html">View the live dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           <a class="button button-secondary" href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">View GitHub repository <span aria-hidden="true">↗</span></a>
@@ -270,7 +270,7 @@
         </div>
         <a class="button button-primary" href="docs/index.html#predict-customer">Try one customer prediction <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
-      <p class="section-head" style="margin-top:12px">To try it locally, run <code>python src/train_churn_model.py</code>, then start the API in a second terminal with <code>python -m uvicorn src.api:app --reload --port 8000</code>. Deploy the free Render API and enter its HTTPS address in the form; the setup guide shows each step. <a href="docs/API_SETUP.md">Open the beginner setup guide</a>.</p>
+      <p class="section-head" style="margin-top:12px">To try it locally, run <code>python src/train_churn_model.py</code>, then start the API in a second terminal with <code>python -m uvicorn src.api:app --reload --port 8000</code>. The public dashboard uses the shared Render API; add a Gemini key in Render to activate chat for every visitor. The setup guide shows each step. <a href="docs/API_SETUP.md">Open the beginner setup guide</a>.</p>
     </section>
 
     <section class="wrap dashboard-section" id="dashboard" aria-labelledby="dashboard-title">
@@ -278,7 +278,7 @@
         <div>
           <p class="section-kicker">Dashboard</p>
           <h2 id="dashboard-title">Explore the customer churn dashboard</h2>
-          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. A separate single-customer form returns an estimate and SHAP reasons when its prediction API is available.</p>
+          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The shared Render API powers single-customer predictions and a Gemini chatbot that answers questions using project dataset summaries, model results, and SHAP factors.</p>
         </div>
         <a class="button button-primary" href="docs/index.html">Open dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
