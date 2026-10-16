@@ -97,6 +97,11 @@
     .model-metric span { display: block; color: #698174; font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
     .model-metric strong { display: block; margin-top: 3px; color: #155540; font-size: 17px; font-variant-numeric: tabular-nums; }
     .model-state { margin-top: 8px !important; color: #718579 !important; font-size: 9px !important; }
+    .model-comparison-wrap { overflow-x: auto; margin-top: 8px; border: 1px solid #e4eee7; border-radius: 7px; }
+    .model-comparison { width: 100%; border-collapse: collapse; font-size: 8px; white-space: nowrap; }
+    .model-comparison th { padding: 7px 6px; color: #647a6e; background: #f3f8f4; font-size: 7px; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+    .model-comparison td { padding: 7px 6px; border-top: 1px solid #e8f0ea; color: #355344; }
+    .model-comparison tr.selected-model td { color: #155540; background: #edf8f0; font-weight: 700; }
     .model-driver-list { display: grid; gap: 7px; margin: 12px 0 0; padding: 0; list-style: none; }
     .model-driver-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 9px; border: 1px solid #e4eee7; border-radius: 7px; background: #f8fbf8; }
     .model-driver-list strong { color: #24523b; font-size: 10px; }
@@ -221,18 +226,18 @@
     <section class="wrap section" id="machine-learning" aria-labelledby="ml-overview-title">
       <div class="section-head">
         <p class="section-kicker">AI &amp; machine learning</p>
-        <h2 id="ml-overview-title">A churn model with explanations you can inspect</h2>
-        <p>This update adds supervised machine learning to the original customer analysis. The model estimates churn risk for a held-out test sample, and SHAP explains which recorded features influenced each estimate.</p>
+        <h2 id="ml-overview-title">Compare three churn models and inspect their explanations</h2>
+        <p>This update compares Logistic Regression, Random Forest, and Gradient Boosting on the same held-out customers. SHAP explains which recorded features influenced the selected model's estimates.</p>
       </div>
       <div class="feature-grid model-grid">
         <article class="feature model-feature">
-          <h3>Train a churn model</h3>
-          <p>A scikit-learn Logistic Regression pipeline learns from the Telco dataset. Customer IDs are excluded from the model inputs. Training and test records are separated using a stratified split.</p>
+          <h3>Compare three models</h3>
+          <p>Logistic Regression, Random Forest, and Gradient Boosting learn from the same Telco training records. Customer IDs are excluded, and a shared stratified split keeps the comparison fair.</p>
           <span class="model-method" id="overview-model-method">Loading model details…</span>
         </article>
         <article class="feature model-feature">
-          <h3>Evaluate on held-out records</h3>
-          <p>These scores describe test records the model did not use for training.</p>
+          <h3>Compare held-out scores</h3>
+          <p>Every model is scored on the same customers. The highest ROC-AUC is selected; F1 breaks ties.</p>
           <div class="model-metrics" aria-live="polite">
             <div class="model-metric"><span>Precision</span><strong id="overview-precision">—</strong></div>
             <div class="model-metric"><span>Recall</span><strong id="overview-recall">—</strong></div>
@@ -240,17 +245,18 @@
             <div class="model-metric"><span>ROC-AUC</span><strong id="overview-roc-auc">—</strong></div>
           </div>
           <p class="model-state" id="overview-model-state" role="status" aria-live="polite">Loading model evaluation…</p>
+          <div class="model-comparison-wrap"><table class="model-comparison"><thead><tr><th>Model</th><th>Accuracy</th><th>F1</th><th>ROC-AUC</th></tr></thead><tbody id="overview-model-comparison"><tr><td colspan="4">Loading comparison…</td></tr></tbody></table></div>
         </article>
         <article class="feature model-feature">
-          <h3>Explain estimates with SHAP</h3>
-          <p>SHAP highlights the customer details that raised or lowered a model-estimated risk. These are explanations of model behavior, not proof that a feature caused churn.</p>
+          <h3>Explain the selected model with SHAP</h3>
+          <p>SHAP is the Explainable AI (XAI) part of this project. It shows which recorded details raised or lowered the selected model's score, without claiming they caused churn.</p>
           <ul class="model-driver-list" id="overview-model-drivers"><li>Loading leading model factors…</li></ul>
         </article>
       </div>
       <div class="dashboard-card model-cta">
         <div>
           <p class="section-kicker">Explore the updated dashboard</p>
-          <h2>Review model scores and customer-level reasons</h2>
+          <h2>Review three model scores and customer-level reasons</h2>
           <p>The examples are from the held-out test sample. The current project does not make predictions for newly entered customer details.</p>
         </div>
         <a class="button button-primary" href="docs/index.html#ml-section">Open AI/ML results <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -262,7 +268,7 @@
         <div>
           <p class="section-kicker">Dashboard</p>
           <h2 id="dashboard-title">Explore the customer churn dashboard</h2>
-          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The dashboard also includes held-out model scores and SHAP reasons.</p>
+          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The dashboard also includes a three-model comparison and SHAP reasons.</p>
         </div>
         <a class="button button-primary" href="docs/index.html">Open dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
@@ -276,7 +282,7 @@
           <p>The page and dashboard sit alongside the dataset and exploratory notebook in the project repository.</p>
         </div>
         <div class="content-grid">
-          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered historical charts, Logistic Regression results, and customer-level SHAP explanations.</p></article>
+          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered historical charts, a three-model comparison, and customer-level SHAP explanations.</p></article>
           <article class="content-card"><small>Exploratory analysis</small><a href="notebooks/01_eda.ipynb">View the EDA notebook</a><p>Notebook included in the project repository.</p></article>
           <article class="content-card"><small>Source data</small><a href="data/WA_Fn-UseC_-Telco-Customer-Churn.csv">Open the Telco churn CSV</a><p>Customer records used by the dashboard.</p></article>
         </div>
@@ -342,22 +348,54 @@
     }
     async function showModelOverview() {
       const state = document.getElementById("overview-model-state");
+      const comparisonBody = document.getElementById("overview-model-comparison");
       try {
         const response = await fetch("docs/data/ml_predictions.json", { cache: "no-store" });
         if (!response.ok) throw new Error("Model results are unavailable");
         const results = await response.json();
         const evaluation = results.evaluation || {};
         const metrics = evaluation.metrics || {};
+        const comparison = Array.isArray(results.modelComparison) ? results.modelComparison : [];
         const asPercent = value => Number.isFinite(Number(value)) ? (Number(value) * 100).toFixed(1) + "%" : "—";
         document.getElementById("overview-model-method").textContent =
-          (results.model || "Churn model") + " · " +
+          (results.model || "Churn model") + (comparison.length ? " selected from 3 models · " : " current model · ") +
           Number(evaluation.trainingRows || 0).toLocaleString("en-IN") + " training records · " +
           Number(evaluation.testRows || 0).toLocaleString("en-IN") + " held-out test records";
         document.getElementById("overview-precision").textContent = asPercent(metrics.precision);
         document.getElementById("overview-recall").textContent = asPercent(metrics.recall);
         document.getElementById("overview-f1").textContent = asPercent(metrics.f1);
         document.getElementById("overview-roc-auc").textContent = asPercent(metrics.rocAuc);
-        state.textContent = "Evaluation uses the separate stratified test sample; these figures do not change with dashboard filters.";
+        state.textContent = comparison.length
+          ? "All models use the same stratified held-out test sample. Selection uses ROC-AUC, with F1 as the tie-breaker."
+          : "Current model scores are shown. Run the updated trainer to generate the three-model comparison.";
+        comparisonBody.replaceChildren();
+        if (comparison.length) {
+          comparison.forEach(result => {
+            const score = result.metrics || {};
+            const selected = Boolean(result.selected || result.model === results.model);
+            const row = document.createElement("tr");
+            if (selected) row.className = "selected-model";
+            const values = [
+              result.model + (selected ? " · selected" : ""),
+              asPercent(score.accuracy),
+              asPercent(score.f1),
+              asPercent(score.rocAuc)
+            ];
+            values.forEach(value => {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              row.append(cell);
+            });
+            comparisonBody.append(row);
+          });
+        } else {
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+          cell.colSpan = 4;
+          cell.textContent = "Comparison appears after running the updated trainer.";
+          row.append(cell);
+          comparisonBody.append(row);
+        }
         const driverList = document.getElementById("overview-model-drivers");
         driverList.replaceChildren();
         (evaluation.globalDrivers || []).slice(0, 3).forEach(driver => {
@@ -377,6 +415,13 @@
       } catch (error) {
         state.textContent = "Model summary is unavailable. Open the dashboard to check model results.";
         document.getElementById("overview-model-method").textContent = "Model details unavailable";
+        comparisonBody.replaceChildren();
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.textContent = "Model comparison unavailable.";
+        row.append(cell);
+        comparisonBody.append(row);
         document.getElementById("overview-model-drivers").replaceChildren();
       }
     }
