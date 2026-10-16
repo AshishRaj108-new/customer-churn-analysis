@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Compare three churn models and export holdout predictions with SHAP explanations.
+"""Compare three churn models and export dashboard results plus a live model artifact.
 
-All models use the same stratified train/test split and the same preprocessed
-features. The best model is selected by held-out ROC-AUC (F1 breaks ties).
-Only held-out rows are exported to the static dashboard.
+All models use the same stratified train/test split and preprocessing. The best
+model is selected by 5-fold training ROC-AUC (F1 breaks ties). Holdout rows are
+exported for evaluation; the fitted training pipeline is saved for single-row predictions.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
 import shap
@@ -36,6 +37,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CSV = PROJECT_ROOT / "data" / "WA_Fn-UseC_-Telco-Customer-Churn.csv"
 DEFAULT_OUTPUT = PROJECT_ROOT / "docs" / "data" / "ml_predictions.json"
+DEFAULT_MODEL_OUTPUT = PROJECT_ROOT / "models" / "churn_live_model.joblib"
 NUMERIC_COLUMNS = ["SeniorCitizen", "tenure", "MonthlyCharges", "TotalCharges"]
 TARGET_COLUMN = "Churn"
 ID_COLUMN = "customerID"
@@ -48,6 +50,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--csv", type=Path, default=DEFAULT_CSV, help="Path to the Telco churn CSV.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Output JSON path for the dashboard.")
+    parser.add_argument("--model-output", type=Path, default=DEFAULT_MODEL_OUTPUT, help="Output path for the single-customer prediction model.")
     parser.add_argument("--test-size", type=float, default=0.2, help="Fraction reserved for holdout evaluation.")
     parser.add_argument("--random-state", type=int, default=RANDOM_SEED, help="Seed used for the reproducible split.")
     parser.add_argument("--shap-background-size", type=int, default=200, help="Training rows used as SHAP background data.")
@@ -300,6 +303,19 @@ def main() -> None:
     groups = grouped_feature_indices(preprocessor, feature_columns)
     global_drivers, row_reasons = summarize_explanations(shap_values, x_test, groups)
 
+    args.model_output.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(
+        {
+            "modelName": best_name,
+            "pipeline": best_pipeline,
+            "featureColumns": feature_columns,
+            "featureGroups": groups,
+            "background": background,
+            "threshold": 0.5,
+        },
+        args.model_output,
+    )
+
     comparison = [
         {
             "model": name,
@@ -369,6 +385,7 @@ def main() -> None:
     print(f"Held-out test rows: {output['evaluation']['testRows']}")
     print(f"SHAP reasons generated for {len(row_reasons)} held-out customers.")
     print(f"Dashboard data written to: {args.output}")
+    print(f"Single-customer model written to: {args.model_output}")
 
 
 if __name__ == "__main__":
