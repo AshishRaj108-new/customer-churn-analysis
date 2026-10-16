@@ -878,6 +878,19 @@
       while (chatLog.children.length > 21) chatLog.removeChild(chatLog.children[1]);
       chatLog.scrollTop = chatLog.scrollHeight;
     }
+    function normalizeChatAnswer(value) {
+      if (typeof value === "string") return value.trim();
+      if (Array.isArray(value)) return value.map(normalizeChatAnswer).filter(Boolean).join("\n");
+      if (value && typeof value === "object") {
+        for (const key of ["text", "answer", "message", "content", "response"]) {
+          if (key in value) {
+            const text = normalizeChatAnswer(value[key]);
+            if (text) return text;
+          }
+        }
+      }
+      return "";
+    }
     async function submitChat(event) {
       event.preventDefault();
       const message = chatInput.value.trim();
@@ -909,7 +922,7 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.detail || ("Chat request returned " + response.status));
-        const answer = String(result.answer || "").trim();
+        const answer = normalizeChatAnswer(result.answer ?? result.response ?? result.text);
         if (!answer) throw new Error("The assistant returned an empty answer. Please try again.");
         addChatBubble("assistant", answer);
         chatHistory.push({ role: "user", text: message }, { role: "model", text: answer });
