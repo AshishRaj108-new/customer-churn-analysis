@@ -217,7 +217,7 @@
             <div class="ml-metric"><span>Test records</span><strong id="ml-test-count">—</strong></div>
           </div>
           <p class="ml-state" id="ml-state" role="status" aria-live="polite">Loading model results…</p>
-          <div class="table-wrap comparison-wrap"><table><thead><tr><th scope="col">Model</th><th scope="col">Accuracy</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">Test ROC-AUC</th><th scope="col">5-fold CV ROC-AUC</th><th scope="col">Choice</th></tr></thead><tbody id="ml-comparison-body"><tr><td colspan="7" class="table-empty">Loading model comparison…</td></tr></tbody></table></div>
+          <div class="table-wrap comparison-wrap"><table><thead><tr><th scope="col">Model</th><th scope="col">Accuracy</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">Test ROC-AUC</th><th scope="col">5-fold CV ROC-AUC</th><th scope="col">Choice</th></tr></thead><tbody id="ml-comparison-body"><tr><td colspan="8" class="table-empty">Loading model comparison…</td></tr></tbody></table></div>
           <p class="ml-state" id="ml-comparison-note">All three models are evaluated against the same held-out customers.</p>
         </article>
         <article class="chart-card full">
@@ -534,7 +534,7 @@
         ["ml-precision", "ml-recall", "ml-f1", "ml-roc-auc", "ml-test-count"].forEach(id => { document.getElementById(id).textContent = "—"; });
         state.textContent = "Model results are unavailable. Run src/train_churn_model.py from the project root to generate docs/data/ml_predictions.json.";
         tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No model predictions are available yet.</td></tr>';
-        comparisonBody.innerHTML = '<tr><td colspan="7" class="table-empty">No model comparison is available yet.</td></tr>';
+        comparisonBody.innerHTML = '<tr><td colspan="8" class="table-empty">No model comparison is available yet.</td></tr>';
         return;
       }
       document.getElementById("ml-precision").textContent = (Number(metrics.precision) * 100).toFixed(1) + "%";
@@ -563,7 +563,7 @@
         }).join("");
         comparisonNote.textContent = "All models use the same split. Selection: " + (mlResults.selectionRule || "highest 5-fold validation ROC-AUC; mean F1 breaks ties.") + " Test scores use the untouched holdout; SHAP explains the selected model.";
       } else {
-        comparisonBody.innerHTML = '<tr><td colspan="7" class="table-empty">Comparison data has not been generated yet. Run the updated trainer to compare all three models.</td></tr>';
+        comparisonBody.innerHTML = '<tr><td colspan="8" class="table-empty">Comparison data has not been generated yet. Run the updated trainer to compare all three models.</td></tr>';
         comparisonNote.textContent = "The displayed evaluation is from the existing model results. Re-run src/train_churn_model.py in the project folder to create the three-model comparison.";
       }
 
