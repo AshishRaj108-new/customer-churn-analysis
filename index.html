@@ -236,7 +236,7 @@
       <div class="section-head">
         <p class="section-kicker">AI &amp; machine learning</p>
         <h2 id="ml-overview-title">Compare three churn models and inspect their explanations</h2>
-        <p>This update compares Logistic Regression, Random Forest, and Gradient Boosting on the same held-out customers. SHAP explains which recorded features influenced the selected model's estimates.</p>
+        <p>This compares Logistic Regression, Random Forest, and Gradient Boosting on the same held-out customers. A separate form can also score one new customer's details and show SHAP factors from the selected model.</p>
       </div>
       <div class="feature-grid model-grid">
         <article class="feature model-feature">
@@ -266,10 +266,11 @@
         <div>
           <p class="section-kicker">Explore the updated dashboard</p>
           <h2>Review three model scores and customer-level reasons</h2>
-          <p>The examples are from the held-out test sample. The current project does not make predictions for newly entered customer details.</p>
+          <p>The examples above come from the held-out test sample. The separate form scores one newly entered customer's details and shows its leading SHAP factors; it does not change the historical charts or save the entry.</p>
         </div>
-        <a class="button button-primary" href="docs/index.html#ml-section">Open AI/ML results <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="button button-primary" href="docs/index.html#predict-customer">Try one customer prediction <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
+      <p class="section-head" style="margin-top:12px">To try it locally, run <code>python src/train_churn_model.py</code>, then start the API in a second terminal with <code>python -m uvicorn src.api:app --reload --port 8000</code>. GitHub Pages needs a separately hosted HTTPS API address entered in the form. <a href="docs/API_SETUP.md">See the beginner setup steps</a>.</p>
     </section>
 
     <section class="wrap dashboard-section" id="dashboard" aria-labelledby="dashboard-title">
@@ -277,7 +278,7 @@
         <div>
           <p class="section-kicker">Dashboard</p>
           <h2 id="dashboard-title">Explore the customer churn dashboard</h2>
-          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The dashboard also includes a three-model comparison and SHAP reasons.</p>
+          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. A separate single-customer form returns an estimate and SHAP reasons when its prediction API is available.</p>
         </div>
         <a class="button button-primary" href="docs/index.html">Open dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
@@ -291,7 +292,7 @@
           <p>The page and dashboard sit alongside the dataset and exploratory notebook in the project repository.</p>
         </div>
         <div class="content-grid">
-          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered historical charts, a three-model comparison, and customer-level SHAP explanations.</p></article>
+          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered historical charts, a three-model comparison, held-out examples, and a form for scoring one newly entered customer.</p></article>
           <article class="content-card"><small>Exploratory analysis</small><a href="notebooks/01_eda.ipynb">View the EDA notebook</a><p>Notebook included in the project repository.</p></article>
           <article class="content-card"><small>Source data</small><a href="data/WA_Fn-UseC_-Telco-Customer-Churn.csv">Open the Telco churn CSV</a><p>Customer records used by the dashboard.</p></article>
         </div>
