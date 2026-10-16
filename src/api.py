@@ -359,11 +359,17 @@ def chat(payload: ChatRequest) -> dict:
         with urlopen(request, timeout=30) as response:
             result = json.loads(response.read().decode("utf-8"))
     except HTTPError as error:
+        # Log only the upstream status and model. Never log the key, customer data, or chat text.
+        print(f"Gemini API returned HTTP {error.code} for model {model_name}.")
         if error.code == 429:
             raise HTTPException(status_code=429, detail="Gemini's current free-tier request limit was reached. Please try again later.") from error
         if error.code in (400, 401, 403):
             raise HTTPException(status_code=502, detail="Gemini rejected the request. Check the API key and its access in Google AI Studio.") from error
-        raise HTTPException(status_code=502, detail="Gemini could not complete the request. Please try again.") from error
+        if error.code == 404:
+            raise HTTPException(status_code=502, detail=f"Gemini model '{model_name}' was not found or is unavailable for this key. Check GEMINI_MODEL in Render.") from error
+        if 500 <= error.code < 600:
+            raise HTTPException(status_code=503, detail=f"Gemini is temporarily unavailable (HTTP {error.code}). Please try again shortly.") from error
+        raise HTTPException(status_code=502, detail=f"Gemini returned HTTP {error.code}. Check the Render model setting and Google AI Studio access.") from error
     except (URLError, TimeoutError):
         raise HTTPException(status_code=502, detail="Could not reach Gemini. Please try again in a moment.") from None
     except (json.JSONDecodeError, UnicodeDecodeError):
