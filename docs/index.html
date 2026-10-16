@@ -116,6 +116,8 @@
     .prediction-field select, .prediction-field input { min-height: 36px; padding: 7px 8px; font-size: 11px; }
     .prediction-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
     .prediction-actions .chart-note { margin: 0; }
+    .prediction-button.sample-button { border-color: #cbdcd2; color: #286247; background: #fff; }
+    .prediction-button.sample-button:hover { background: #eff8f2; }
     .prediction-result { margin-top: 17px; padding: 16px; border: 1px solid #d7e9dd; border-radius: 10px; background: #f5faf6; }
     .prediction-result[hidden] { display: none; }
     .prediction-result-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
@@ -311,7 +313,7 @@
               <label class="prediction-field"><span>Monthly charges (dataset value)</span><input name="MonthlyCharges" type="number" min="0" max="1000" step="0.01" required placeholder="e.g. 65.50"></label>
               <label class="prediction-field"><span>Total charges (dataset value)</span><input name="TotalCharges" type="number" min="0" max="100000" step="0.01" required placeholder="e.g. 1200.00"></label>
             </div>
-            <div class="prediction-actions"><button type="submit" class="prediction-button" id="prediction-submit">Estimate churn risk</button><p class="chart-note">Charges must use the same numeric units as the Telco CSV.</p></div>
+            <div class="prediction-actions"><button type="button" class="prediction-button sample-button" id="fill-sample-customer">Fill sample customer</button><button type="submit" class="prediction-button" id="prediction-submit">Estimate churn risk</button><p class="chart-note">Loads one real Telco CSV row for a demo; it does not change dashboard totals. Charges use the CSV's numeric units.</p></div>
           </form>
           <div class="prediction-result" id="prediction-result" hidden aria-live="polite">
             <div class="prediction-result-top"><div><h4>Estimate for this customer</h4><p id="prediction-model-name">Selected model</p></div><strong class="prediction-score" id="prediction-score">—</strong><span class="prediction-label" id="prediction-label">—</span></div>
@@ -961,6 +963,29 @@
     }
     predictionForm.elements.PhoneService.addEventListener("change", syncPredictionServiceValues);
     predictionForm.elements.InternetService.addEventListener("change", syncPredictionServiceValues);
+    document.getElementById("fill-sample-customer").addEventListener("click", () => {
+      const featureFields = [
+        "gender", "SeniorCitizen", "Partner", "Dependents", "tenure", "PhoneService",
+        "MultipleLines", "InternetService", "OnlineSecurity", "OnlineBackup",
+        "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies",
+        "Contract", "PaperlessBilling", "PaymentMethod", "MonthlyCharges", "TotalCharges"
+      ];
+      const numericFields = ["tenure", "MonthlyCharges", "TotalCharges"];
+      const sample = allCustomers.find(customer =>
+        featureFields.every(name => customer[name] !== undefined && String(customer[name]).trim() !== "") &&
+        numericFields.every(name => Number.isFinite(Number(customer[name])))
+      );
+      if (!sample) {
+        setPredictionStatus("No complete customer row is available yet. Wait for the CSV to load, then try again.", "error");
+        return;
+      }
+      featureFields.forEach(name => {
+        const field = predictionForm.elements.namedItem(name);
+        if (field) field.value = String(sample[name]);
+      });
+      syncPredictionServiceValues();
+      setPredictionStatus("Loaded one real Telco CSV customer as a demo. Its estimate is not added to dashboard totals.", "success");
+    });
     document.getElementById("prediction-health-check").addEventListener("click", checkPredictionApi);
     predictionForm.addEventListener("submit", submitCustomerPrediction);
 
