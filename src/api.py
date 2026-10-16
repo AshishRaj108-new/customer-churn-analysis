@@ -343,21 +343,37 @@ def chat(payload: ChatRequest) -> dict:
     })
 
     model_name = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip()
-    url = "https://generativelanguage.googleapis.com/v1beta/models/" + model_name + ":generateContent"
     body = {
         "systemInstruction": {"parts": [{"text": _CHAT_SYSTEM_INSTRUCTION}]},
         "contents": contents,
         "generationConfig": {"temperature": 0.2, "maxOutputTokens": 450},
     }
-    request = URLRequest(
-        url,
-        data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-        method="POST",
-    )
-    try:
+
+    def generate_content(requested_model: str) -> dict:
+        url = "https://generativelanguage.googleapis.com/v1beta/models/" + requested_model + ":generateContent"
+        request = URLRequest(
+            url,
+            data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
+            method="POST",
+        )
         with urlopen(request, timeout=30) as response:
-            result = json.loads(response.read().decode("utf-8"))
+            return json.loads(response.read().decode("utf-8"))
+
+    try:
+        try:
+            result = generate_content(model_name)
+        except HTTPError as primary_error:
+            fallback_model = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite").strip()
+            if not (500 <= primary_error.code < 600) or not fallback_model or fallback_model == model_name:
+                raise
+            print(f"Gemini model {model_name} returned HTTP {primary_error.code}; retrying with fallback model {fallback_model}.")
+            try:
+                result = generate_content(fallback_model)
+            except HTTPError:
+                model_name = fallback_model
+                raise
+            model_name = fallback_model
     except HTTPError as error:
         # Log only the upstream status and model. Never log the key, customer data, or chat text.
         print(f"Gemini API returned HTTP {error.code} for model {model_name}.")
