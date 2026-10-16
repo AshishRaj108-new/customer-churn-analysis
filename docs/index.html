@@ -81,6 +81,37 @@
     .comparison-wrap { margin-top: 9px; }
     .comparison-selected td { background: #eff8f2; font-weight: 650; }
     .comparison-badge { display: inline-block; padding: 3px 6px; border-radius: 4px; color: #176b4d; background: #daf1e3; font-size: 9px; font-weight: 750; }
+    .prediction-card { overflow: hidden; }
+    .prediction-intro { max-width: 900px; }
+    .prediction-api-row { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: end; gap: 10px; margin: 17px 0 5px; padding: 13px; border: 1px solid var(--line); border-radius: 9px; background: #f7faf8; }
+    .prediction-api-row label { display: block; margin-bottom: 5px; color: var(--ink); font-size: 10px; font-weight: 700; }
+    .prediction-api-row input, .prediction-field select, .prediction-field input { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #cbdcd2; border-radius: 7px; color: var(--ink); background: #fff; }
+    .prediction-api-row input:focus-visible, .prediction-field select:focus-visible, .prediction-field input:focus-visible, .prediction-button:focus-visible { outline: 2px solid #16815f; outline-offset: 2px; }
+    .prediction-api-row button, .prediction-button { min-height: 38px; padding: 8px 14px; border: 1px solid var(--green); border-radius: 7px; color: white; background: var(--green); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .prediction-api-row button:disabled, .prediction-button:disabled { opacity: .6; cursor: wait; }
+    .prediction-help, .prediction-status { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
+    .prediction-status.error { color: var(--red); }
+    .prediction-status.success { color: #16704d; }
+    .prediction-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; margin: 18px 0 14px; }
+    .prediction-group-label { grid-column: 1 / -1; margin: 5px 0 -3px; padding-bottom: 6px; border-bottom: 1px solid var(--line); color: var(--forest); font-size: 10px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .prediction-field { display: block; min-width: 0; }
+    .prediction-field > span { display: block; margin-bottom: 5px; color: #40584c; font-size: 10px; font-weight: 650; }
+    .prediction-field select, .prediction-field input { min-height: 36px; padding: 7px 8px; font-size: 11px; }
+    .prediction-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .prediction-actions .chart-note { margin: 0; }
+    .prediction-result { margin-top: 17px; padding: 16px; border: 1px solid #d7e9dd; border-radius: 10px; background: #f5faf6; }
+    .prediction-result[hidden] { display: none; }
+    .prediction-result-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+    .prediction-result h4 { margin: 0 0 3px; color: var(--forest); font-size: 14px; }
+    .prediction-result p { margin: 0; color: var(--muted); font-size: 10px; }
+    .prediction-score { color: var(--forest); font-size: 28px; font-weight: 780; font-variant-numeric: tabular-nums; }
+    .prediction-label { display: inline-flex; padding: 6px 10px; border-radius: 999px; color: #176b4d; background: #dff3e7; font-size: 10px; font-weight: 750; }
+    .prediction-label.high { color: #9b392e; background: #fae8e4; }
+    .prediction-score-track { height: 7px; margin: 11px 0 16px; overflow: hidden; border-radius: 99px; background: #e1ebe4; }
+    .prediction-score-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #43cf8c, #c43e32); transition: width .25s ease; }
+    .prediction-reasons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 9px 0 0; padding: 0; list-style: none; }
+    .prediction-reasons li { padding: 9px 10px; border: 1px solid #e0ebe3; border-radius: 7px; background: #fff; color: #52675c; font-size: 10px; }
+    .prediction-reasons strong { color: #183b2d; }
     .ml-reasons { min-width: 260px; max-width: 540px; white-space: normal; line-height: 1.45; }
     .ml-score { color: #9b392e; font-weight: 750; font-variant-numeric: tabular-nums; }
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 22px 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -110,6 +141,7 @@
     footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 7px; margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); color: #72877c; font-size: 9px; }
     footer a { color: #39896b; text-decoration: none; }
     @media (max-width: 1100px) {
+      .prediction-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .app { grid-template-columns: 225px minmax(0, 1fr); }
       .main { padding: 22px 20px; }
       .hero { padding: 21px; }
@@ -118,6 +150,9 @@
       .social a { padding: 7px 9px; }
     }
     @media (max-width: 760px) {
+      .prediction-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .prediction-reasons { grid-template-columns: 1fr; }
+      .prediction-api-row { grid-template-columns: 1fr; }
       .app { display: block; }
       .sidebar { position: static; height: auto; min-height: 0; padding: 15px 16px 13px; }
       .brand { padding-bottom: 12px; }
@@ -136,6 +171,7 @@
       .ml-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 430px) {
+      .prediction-fields { grid-template-columns: 1fr; }
       .filters { grid-template-columns: 1fr 1fr; }
       .kpis { gap: 9px; }
       .kpi { min-height: 120px; padding: 12px 11px; }
@@ -224,6 +260,46 @@
           <h3>Highest model-estimated churn scores</h3>
           <p class="chart-note">Rows come from the held-out test sample. SHAP (Explainable AI) factors describe how recorded features influenced the model score; they do not prove cause.</p>
           <div class="table-wrap"><table><thead><tr><th scope="col">Customer ID</th><th scope="col">Estimated churn score</th><th scope="col">Model label</th><th scope="col">Recorded outcome</th><th scope="col">Top model factors</th></tr></thead><tbody id="ml-risk-body"><tr><td colspan="5" class="table-empty">Loading held-out predictions…</td></tr></tbody></table></div>
+        </article>
+      </section>
+
+      <section class="charts" id="predict-customer" aria-labelledby="prediction-title">
+        <article class="chart-card full prediction-card">
+          <h3 id="prediction-title">Try a churn estimate for one customer</h3>
+          <p class="chart-note prediction-intro">Enter one customer's Telco service details. The selected trained model returns a churn estimate and the leading SHAP factors for that individual. This result is shown here separately; it does not change the historical charts or save the details.</p>
+          <div class="prediction-api-row"><div><label for="prediction-api-url">Prediction API address</label><input id="prediction-api-url" type="url" inputmode="url" placeholder="https://your-hosted-api.example" autocomplete="url"></div><button type="button" id="prediction-health-check" class="prediction-button">Check connection</button></div>
+          <p class="prediction-help">On your computer, this fills in <code>http://127.0.0.1:8000</code> when the local API is running. Internet add-on choices will follow the selected internet plan. On the public GitHub Pages site, an HTTPS API must be hosted separately and its address entered here.</p>
+          <p class="prediction-status" id="prediction-api-status" role="status" aria-live="polite">Start the prediction API, then check the connection.</p>
+          <form id="customer-prediction-form">
+            <div class="prediction-fields">
+              <p class="prediction-group-label">Customer profile</p><label class="prediction-field"><span>Gender</span><select name="gender" required><option value="">Choose…</option><option value="Female">Female</option><option value="Male">Male</option></select></label>
+              <label class="prediction-field"><span>Senior citizen</span><select name="SeniorCitizen" required><option value="">Choose…</option><option value="0">No</option><option value="1">Yes</option></select></label>
+              <label class="prediction-field"><span>Partner</span><select name="Partner" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+              <label class="prediction-field"><span>Dependents</span><select name="Dependents" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+              <label class="prediction-field"><span>Tenure (months)</span><input name="tenure" type="number" min="0" max="72" step="1" required placeholder="0–72"></label>
+              <p class="prediction-group-label">Phone and internet service</p><label class="prediction-field"><span>Phone service</span><select name="PhoneService" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+              <label class="prediction-field"><span>Multiple lines</span><select name="MultipleLines" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No phone service">No phone service</option></select></label>
+              <label class="prediction-field"><span>Internet service</span><select name="InternetService" required><option value="">Choose…</option><option value="DSL">DSL</option><option value="Fiber optic">Fiber optic</option><option value="No">No</option></select></label>
+              <label class="prediction-field"><span>Online Security</span><select name="OnlineSecurity" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <label class="prediction-field"><span>Online Backup</span><select name="OnlineBackup" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <label class="prediction-field"><span>Device Protection</span><select name="DeviceProtection" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <label class="prediction-field"><span>Tech Support</span><select name="TechSupport" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <label class="prediction-field"><span>Streaming T V</span><select name="StreamingTV" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <label class="prediction-field"><span>Streaming Movies</span><select name="StreamingMovies" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option><option value="No internet service">No internet service</option></select></label>
+              <p class="prediction-group-label">Account and charges</p><label class="prediction-field"><span>Contract</span><select name="Contract" required><option value="">Choose…</option><option value="Month-to-month">Month-to-month</option><option value="One year">One year</option><option value="Two year">Two year</option></select></label>
+              <label class="prediction-field"><span>Paperless billing</span><select name="PaperlessBilling" required><option value="">Choose…</option><option value="Yes">Yes</option><option value="No">No</option></select></label>
+              <label class="prediction-field"><span>Payment method</span><select name="PaymentMethod" required><option value="">Choose…</option><option value="Bank transfer (automatic)">Bank transfer (automatic)</option><option value="Credit card (automatic)">Credit card (automatic)</option><option value="Electronic check">Electronic check</option><option value="Mailed check">Mailed check</option></select></label>
+              <label class="prediction-field"><span>Monthly charges (dataset value)</span><input name="MonthlyCharges" type="number" min="0" max="1000" step="0.01" required placeholder="e.g. 65.50"></label>
+              <label class="prediction-field"><span>Total charges (dataset value)</span><input name="TotalCharges" type="number" min="0" max="100000" step="0.01" required placeholder="e.g. 1200.00"></label>
+            </div>
+            <div class="prediction-actions"><button type="submit" class="prediction-button" id="prediction-submit">Estimate churn risk</button><p class="chart-note">Charges must use the same numeric units as the Telco CSV.</p></div>
+          </form>
+          <div class="prediction-result" id="prediction-result" hidden aria-live="polite">
+            <div class="prediction-result-top"><div><h4>Estimate for this customer</h4><p id="prediction-model-name">Selected model</p></div><strong class="prediction-score" id="prediction-score">—</strong><span class="prediction-label" id="prediction-label">—</span></div>
+            <div class="prediction-score-track" role="progressbar" aria-label="Estimated churn probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="prediction-score-fill" id="prediction-score-fill" style="width:0%"></div></div>
+            <h4>Leading SHAP factors</h4><ul class="prediction-reasons" id="prediction-reasons"></ul>
+            <p class="prediction-help">The score is a model estimate, not a promise of what a customer will do. SHAP factors describe associations learned by this model; they do not prove cause. Impact values are in model-score units.</p>
+          </div>
         </article>
       </section>
 
@@ -634,6 +710,130 @@
         console.error("Could not load the Telco customer CSV:", error);
       }
     }
+    function predictionApiBase() {
+      let base = document.getElementById("prediction-api-url").value.trim();
+      while (base.endsWith("/")) base = base.slice(0, -1);
+      return base;
+    }
+    function setPredictionStatus(message, kind = "") {
+      const status = document.getElementById("prediction-api-status");
+      status.textContent = message;
+      status.className = "prediction-status" + (kind ? " " + kind : "");
+    }
+    async function checkPredictionApi() {
+      const base = predictionApiBase();
+      if (!base) {
+        setPredictionStatus("Enter the HTTPS address of a hosted API, or run the local API first.", "error");
+        return false;
+      }
+      if (window.location.protocol === "https:" && base.startsWith("http://")) {
+        setPredictionStatus("This page is HTTPS. Use an HTTPS API address for the public site.", "error");
+        return false;
+      }
+      const button = document.getElementById("prediction-health-check");
+      button.disabled = true;
+      setPredictionStatus("Checking the prediction API…");
+      try {
+        const response = await fetch(base + "/health");
+        const result = await response.json();
+        if (!response.ok || result.status !== "ready") throw new Error(result.message || "The model is not ready.");
+        setPredictionStatus("Connected · " + result.model + " is ready for a new customer estimate.", "success");
+        return true;
+      } catch (error) {
+        setPredictionStatus(error.message || "Could not reach the API. Confirm it is running and allows this page.", "error");
+        return false;
+      } finally {
+        button.disabled = false;
+      }
+    }
+    function showPrediction(result) {
+      const probability = Math.max(0, Math.min(1, Number(result.probability)));
+      const percentValue = probability * 100;
+      document.getElementById("prediction-result").hidden = false;
+      document.getElementById("prediction-model-name").textContent = result.model + " · threshold " + (Number(result.threshold) * 100).toFixed(0) + "%";
+      document.getElementById("prediction-score").textContent = percentValue.toFixed(1) + "%";
+      const label = document.getElementById("prediction-label");
+      label.textContent = "Predicted churn: " + result.predictedChurn;
+      label.className = "prediction-label" + (result.predictedChurn === "Yes" ? " high" : "");
+      const track = document.querySelector(".prediction-score-track");
+      track.setAttribute("aria-valuenow", percentValue.toFixed(1));
+      document.getElementById("prediction-score-fill").style.width = percentValue + "%";
+      const list = document.getElementById("prediction-reasons");
+      list.replaceChildren();
+      (result.reasons || []).forEach(reason => {
+        const item = document.createElement("li");
+        const title = document.createElement("strong");
+        title.textContent = String(reason.feature).replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim();
+        const detail = document.createElement("span");
+        const impact = Number(reason.signedImpact);
+        detail.textContent = " = " + reason.value + " · " + reason.direction + " the score (" + (impact >= 0 ? "+" : "") + impact.toFixed(3) + " SHAP units)";
+        item.append(title, detail);
+        list.append(item);
+      });
+      if (!list.children.length) {
+        const item = document.createElement("li");
+        item.textContent = "No notable SHAP factors were returned.";
+        list.append(item);
+      }
+    }
+    async function submitCustomerPrediction(event) {
+      event.preventDefault();
+      const base = predictionApiBase();
+      if (!base) {
+        setPredictionStatus("Enter an API address first. The public GitHub Pages site needs a hosted HTTPS API.", "error");
+        return;
+      }
+      if (window.location.protocol === "https:" && base.startsWith("http://")) {
+        setPredictionStatus("This public page needs an HTTPS API address.", "error");
+        return;
+      }
+      const form = event.currentTarget;
+      syncPredictionServiceValues();
+      const values = Object.fromEntries(new FormData(form).entries());
+      ["SeniorCitizen", "tenure", "MonthlyCharges", "TotalCharges"].forEach(key => { values[key] = Number(values[key]); });
+      const button = document.getElementById("prediction-submit");
+      button.disabled = true;
+      setPredictionStatus("Scoring this customer and preparing SHAP reasons…");
+      try {
+        const response = await fetch(base + "/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          const detail = Array.isArray(result.detail) ? "Please check every selected value and number." : (result.detail || "The prediction could not be completed.");
+          throw new Error(detail);
+        }
+        showPrediction(result);
+        setPredictionStatus("Estimate ready. The entered details were not saved.", "success");
+      } catch (error) {
+        setPredictionStatus(error.message || "Could not reach the API. Confirm it is running and allows this page.", "error");
+      } finally {
+        button.disabled = false;
+      }
+    }
+    const predictionApiUrl = document.getElementById("prediction-api-url");
+    if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+      predictionApiUrl.value = "http://127.0.0.1:8000";
+    }
+    const predictionForm = document.getElementById("customer-prediction-form");
+    const internetAddOns = ["OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"];
+    function syncPredictionServiceValues() {
+      const phoneService = predictionForm.elements.PhoneService.value;
+      if (phoneService === "No") predictionForm.elements.MultipleLines.value = "No phone service";
+      const internetService = predictionForm.elements.InternetService.value;
+      internetAddOns.forEach(name => {
+        const field = predictionForm.elements[name];
+        if (internetService === "No") field.value = "No internet service";
+        else if (field.value === "No internet service") field.value = "";
+      });
+    }
+    predictionForm.elements.PhoneService.addEventListener("change", syncPredictionServiceValues);
+    predictionForm.elements.InternetService.addEventListener("change", syncPredictionServiceValues);
+    document.getElementById("prediction-health-check").addEventListener("click", checkPredictionApi);
+    predictionForm.addEventListener("submit", submitCustomerPrediction);
+
     document.querySelectorAll(".filter select").forEach(select => select.addEventListener("change", render));
     document.getElementById("reset-filters").addEventListener("click", () => {
       document.querySelectorAll(".filter select").forEach(select => { select.value = ""; });
