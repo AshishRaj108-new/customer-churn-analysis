@@ -27,6 +27,8 @@
     .wrap { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
     .hero-shell { position: relative; overflow: hidden; color: #eff8f2; background: radial-gradient(ellipse at 84% 35%, rgba(39, 137, 94, .28), transparent 38%), linear-gradient(135deg, #0b3026 0%, #104837 62%, #0a3829 100%); }
     .hero-shell::before { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 48px 48px; content: ""; mask-image: linear-gradient(90deg, #000, transparent 90%); pointer-events: none; }
+    .nav-shell { position: sticky; top: 0; z-index: 20; color: #eff8f2; background: rgba(11,48,38,.97); box-shadow: 0 5px 18px rgba(5,24,18,.12); backdrop-filter: blur(12px); }
+    .section[id], .dashboard-section[id] { scroll-margin-top: 92px; }
     .topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 78px; border-bottom: 1px solid rgba(255,255,255,.12); }
     .brand { display: inline-flex; align-items: center; gap: 11px; color: #eff8f2; font-size: 14px; font-weight: 750; text-decoration: none; }
     .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(111,233,164,.4); border-radius: 10px; color: #83e2ac; background: rgba(71,185,123,.15); }
@@ -126,6 +128,8 @@
     .footer-links a { color: #85e0a9; text-decoration: none; }
     .footer-links a:hover { color: #fff; text-decoration: underline; }
     @media (max-width: 760px) {
+      .topbar { flex-wrap: wrap; gap: 12px; padding-block: 10px; }
+      .nav { flex-wrap: wrap; }
       .hero { grid-template-columns: 1fr; gap: 28px; padding-block: 48px 38px; }
       .mini-dashboard { max-width: 480px; }
       .feature-grid, .content-grid { grid-template-columns: 1fr; }
@@ -135,10 +139,11 @@
     }
     @media (max-width: 540px) {
       .wrap { width: min(100% - 32px, 1120px); }
-      .topbar { min-height: 65px; }
-      .nav { gap: 11px; font-size: 10px; }
+      .topbar { min-height: 0; align-items: flex-start; flex-direction: column; gap: 7px; padding-block: 10px; }
+      .nav { width: 100%; flex-wrap: nowrap; gap: 14px; overflow-x: auto; padding-block: 2px 5px; font-size: 10px; scrollbar-width: none; }
+      .nav::-webkit-scrollbar { display: none; }
+      .nav a { flex: 0 0 auto; white-space: nowrap; }
       .nav .nav-cta { padding: 7px 9px; }
-      .nav a:nth-child(2) { display: none; }
       .brand { font-size: 12px; }
       .hero { padding-block: 42px 31px; }
       .hero-copy { font-size: 13px; }
@@ -154,7 +159,7 @@
   </style>
 </head>
 <body>
-  <header class="hero-shell">
+  <div class="nav-shell">
     <div class="wrap topbar">
       <a class="brand" href="./" aria-label="Ashish Raj project overview">
         <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V6m0 12h16M8 15l3-4 3 2 5-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -163,11 +168,15 @@
       <nav class="nav" aria-label="Main navigation">
         <a href="#overview">Overview</a>
         <a href="#machine-learning">AI &amp; ML</a>
+        <a href="#dashboard">Dashboard</a>
         <a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a class="nav-cta" href="docs/index.html">Open dashboard <span aria-hidden="true">↗</span></a>
       </nav>
     </div>
+  </div>
 
+
+  <header class="hero-shell">
     <div class="wrap hero">
       <div>
         <p class="eyebrow">Customer analytics · End-to-end project</p>
@@ -263,7 +272,7 @@
       </div>
     </section>
 
-    <section class="wrap dashboard-section" aria-labelledby="dashboard-title">
+    <section class="wrap dashboard-section" id="dashboard" aria-labelledby="dashboard-title">
       <div class="dashboard-card">
         <div>
           <p class="section-kicker">Dashboard</p>
@@ -275,7 +284,7 @@
     </section>
 
     <div class="contents">
-      <section class="wrap section" aria-labelledby="contents-title">
+      <section class="wrap section" id="project-files" aria-labelledby="contents-title">
         <div class="section-head">
           <p class="section-kicker">Project files</p>
           <h2 id="contents-title">Take a closer look</h2>
