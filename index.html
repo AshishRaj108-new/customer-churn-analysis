@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b3026">
-  <meta name="description" content="Ashish Raj's customer churn analysis project, with an interactive Telco customer dashboard.">
+  <meta name="description" content="Ashish Raj's Telco customer churn project with an interactive dashboard, Logistic Regression model, and SHAP explanations.">
   <title>Customer Churn Analysis | Ashish Raj</title>
   <style>
     :root {
@@ -89,6 +89,19 @@
     .feature-icon svg { width: 18px; height: 18px; }
     .feature h3 { margin-bottom: 6px; color: #17392c; font-size: 14px; }
     .feature p { margin: 0; color: #6b8075; font-size: 11px; line-height: 1.65; }
+    .model-grid { align-items: stretch; }
+    .model-feature { min-height: 215px; }
+    .model-method { display: inline-flex; margin-top: 13px; padding: 6px 9px; border: 1px solid #d7e9dd; border-radius: 7px; color: #2d6247; background: #f4f9f5; font-size: 9px; font-weight: 700; }
+    .model-metrics { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin: 12px 0 4px; }
+    .model-metric { padding: 8px 9px; border-radius: 7px; background: #f0f7f2; }
+    .model-metric span { display: block; color: #698174; font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .model-metric strong { display: block; margin-top: 3px; color: #155540; font-size: 17px; font-variant-numeric: tabular-nums; }
+    .model-state { margin-top: 8px !important; color: #718579 !important; font-size: 9px !important; }
+    .model-driver-list { display: grid; gap: 7px; margin: 12px 0 0; padding: 0; list-style: none; }
+    .model-driver-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 9px; border: 1px solid #e4eee7; border-radius: 7px; background: #f8fbf8; }
+    .model-driver-list strong { color: #24523b; font-size: 10px; }
+    .model-driver-list small { color: #708378; font-size: 8px; text-align: right; }
+    .model-cta { margin-top: 18px; }
     .dashboard-section { padding: 0 0 58px; }
     .dashboard-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 28px; padding: 27px 30px; border: 1px solid #d8e9de; border-radius: 13px; background: linear-gradient(112deg, #fff 0%, #f5fbf6 100%); box-shadow: 0 6px 20px rgba(16,72,55,.045); }
     .dashboard-card h2 { margin-bottom: 7px; font-size: 26px; }
@@ -144,6 +157,7 @@
       </a>
       <nav class="nav" aria-label="Main navigation">
         <a href="#overview">Overview</a>
+        <a href="#machine-learning">AI &amp; ML</a>
         <a href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a class="nav-cta" href="docs/index.html">Open dashboard <span aria-hidden="true">↗</span></a>
       </nav>
@@ -153,7 +167,7 @@
       <div>
         <p class="eyebrow">Customer analytics · End-to-end project</p>
         <h1>Customer Churn <em>Analysis</em></h1>
-        <p class="hero-copy">A practical look at why telecom customers leave. Explore the project data, compare churn across customer groups, and open the interactive dashboard for a closer analysis.</p>
+        <p class="hero-copy">Explore why telecom customers leave through historical data analysis, a trained churn prediction model, and SHAP explanations that show which recorded factors shaped a model score.</p>
         <div class="hero-actions">
           <a class="button button-primary" href="docs/index.html">View the live dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           <a class="button button-secondary" href="https://github.com/AshishRaj108-new/customer-churn-analysis" target="_blank" rel="noopener noreferrer">View GitHub repository <span aria-hidden="true">↗</span></a>
@@ -182,7 +196,7 @@
       <div class="section-head">
         <p class="section-kicker">What this project explores</p>
         <h2 id="overview-title">From customer records to retention insights</h2>
-        <p>Use the dashboard to explore the recorded data with filters and see how churn varies across contracts, tenure, payments, internet service, and subscribed services.</p>
+        <p>Explore historical churn patterns and monthly charges, then review machine-learning estimates and their SHAP explanations in the same dashboard.</p>
       </div>
       <div class="feature-grid">
         <article class="feature">
@@ -203,12 +217,52 @@
       </div>
     </section>
 
+
+    <section class="wrap section" id="machine-learning" aria-labelledby="ml-overview-title">
+      <div class="section-head">
+        <p class="section-kicker">AI &amp; machine learning</p>
+        <h2 id="ml-overview-title">A churn model with explanations you can inspect</h2>
+        <p>This update adds supervised machine learning to the original customer analysis. The model estimates churn risk for a held-out test sample, and SHAP explains which recorded features influenced each estimate.</p>
+      </div>
+      <div class="feature-grid model-grid">
+        <article class="feature model-feature">
+          <h3>Train a churn model</h3>
+          <p>A scikit-learn Logistic Regression pipeline learns from the Telco dataset. Customer IDs are excluded from the model inputs. Training and test records are separated using a stratified split.</p>
+          <span class="model-method" id="overview-model-method">Loading model details…</span>
+        </article>
+        <article class="feature model-feature">
+          <h3>Evaluate on held-out records</h3>
+          <p>These scores describe test records the model did not use for training.</p>
+          <div class="model-metrics" aria-live="polite">
+            <div class="model-metric"><span>Precision</span><strong id="overview-precision">—</strong></div>
+            <div class="model-metric"><span>Recall</span><strong id="overview-recall">—</strong></div>
+            <div class="model-metric"><span>F1 score</span><strong id="overview-f1">—</strong></div>
+            <div class="model-metric"><span>ROC-AUC</span><strong id="overview-roc-auc">—</strong></div>
+          </div>
+          <p class="model-state" id="overview-model-state" role="status" aria-live="polite">Loading model evaluation…</p>
+        </article>
+        <article class="feature model-feature">
+          <h3>Explain estimates with SHAP</h3>
+          <p>SHAP highlights the customer details that raised or lowered a model-estimated risk. These are explanations of model behavior, not proof that a feature caused churn.</p>
+          <ul class="model-driver-list" id="overview-model-drivers"><li>Loading leading model factors…</li></ul>
+        </article>
+      </div>
+      <div class="dashboard-card model-cta">
+        <div>
+          <p class="section-kicker">Explore the updated dashboard</p>
+          <h2>Review model scores and customer-level reasons</h2>
+          <p>The examples are from the held-out test sample. The current project does not make predictions for newly entered customer details.</p>
+        </div>
+        <a class="button button-primary" href="docs/index.html#ml-section">Open AI/ML results <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </section>
+
     <section class="wrap dashboard-section" aria-labelledby="dashboard-title">
       <div class="dashboard-card">
         <div>
           <p class="section-kicker">Dashboard</p>
           <h2 id="dashboard-title">Explore the customer churn dashboard</h2>
-          <p>Filter the dataset by contract, internet service, payment method, churn status, and senior citizen status. Charts and summary figures update from the project CSV.</p>
+          <p>Filter historical charts by contract, internet service, payment method, churn status, and senior citizen status. The dashboard also includes held-out model scores and SHAP reasons.</p>
         </div>
         <a class="button button-primary" href="docs/index.html">Open dashboard <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
@@ -222,7 +276,7 @@
           <p>The page and dashboard sit alongside the dataset and exploratory notebook in the project repository.</p>
         </div>
         <div class="content-grid">
-          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered charts and customer retention summary.</p></article>
+          <article class="content-card"><small>Interactive dashboard</small><a href="docs/index.html">Open churn analytics</a><p>Filtered historical charts, Logistic Regression results, and customer-level SHAP explanations.</p></article>
           <article class="content-card"><small>Exploratory analysis</small><a href="notebooks/01_eda.ipynb">View the EDA notebook</a><p>Notebook included in the project repository.</p></article>
           <article class="content-card"><small>Source data</small><a href="data/WA_Fn-UseC_-Telco-Customer-Churn.csv">Open the Telco churn CSV</a><p>Customer records used by the dashboard.</p></article>
         </div>
@@ -286,7 +340,48 @@
         note.textContent = "Dataset summary is unavailable. Open this page through the project web server to load the CSV; the dashboard can still be opened below.";
       }
     }
+    async function showModelOverview() {
+      const state = document.getElementById("overview-model-state");
+      try {
+        const response = await fetch("docs/data/ml_predictions.json", { cache: "no-store" });
+        if (!response.ok) throw new Error("Model results are unavailable");
+        const results = await response.json();
+        const evaluation = results.evaluation || {};
+        const metrics = evaluation.metrics || {};
+        const asPercent = value => Number.isFinite(Number(value)) ? (Number(value) * 100).toFixed(1) + "%" : "—";
+        document.getElementById("overview-model-method").textContent =
+          (results.model || "Churn model") + " · " +
+          Number(evaluation.trainingRows || 0).toLocaleString("en-IN") + " training records · " +
+          Number(evaluation.testRows || 0).toLocaleString("en-IN") + " held-out test records";
+        document.getElementById("overview-precision").textContent = asPercent(metrics.precision);
+        document.getElementById("overview-recall").textContent = asPercent(metrics.recall);
+        document.getElementById("overview-f1").textContent = asPercent(metrics.f1);
+        document.getElementById("overview-roc-auc").textContent = asPercent(metrics.rocAuc);
+        state.textContent = "Evaluation uses the separate stratified test sample; these figures do not change with dashboard filters.";
+        const driverList = document.getElementById("overview-model-drivers");
+        driverList.replaceChildren();
+        (evaluation.globalDrivers || []).slice(0, 3).forEach(driver => {
+          const item = document.createElement("li");
+          const name = document.createElement("strong");
+          const score = document.createElement("small");
+          name.textContent = driver.feature;
+          score.textContent = "Mean absolute SHAP value: " + Number(driver.meanAbsContribution).toFixed(3);
+          item.append(name, score);
+          driverList.append(item);
+        });
+        if (!driverList.children.length) {
+          const item = document.createElement("li");
+          item.textContent = "Per-customer explanations are available in the dashboard.";
+          driverList.append(item);
+        }
+      } catch (error) {
+        state.textContent = "Model summary is unavailable. Open the dashboard to check model results.";
+        document.getElementById("overview-model-method").textContent = "Model details unavailable";
+        document.getElementById("overview-model-drivers").replaceChildren();
+      }
+    }
     showDatasetSummary();
+    showModelOverview();
   </script>
 </body>
 </html>
