@@ -268,7 +268,7 @@
           <h3 id="prediction-title">Try a churn estimate for one customer</h3>
           <p class="chart-note prediction-intro">Enter one customer's Telco service details. The selected trained model returns a churn estimate and the leading SHAP factors for that individual. This result is shown here separately; it does not change the historical charts or save the details.</p>
           <div class="prediction-api-row"><div><label for="prediction-api-url">Prediction API address</label><input id="prediction-api-url" type="url" inputmode="url" placeholder="https://your-hosted-api.example" autocomplete="url"></div><button type="button" id="prediction-health-check" class="prediction-button">Check connection</button></div>
-          <p class="prediction-help">On your computer, this fills in <code>http://127.0.0.1:8000</code> when the local API is running. Internet add-on choices will follow the selected internet plan. On the public GitHub Pages site, an HTTPS API must be hosted separately and its address entered here.</p>
+          <p class="prediction-help">On your computer, this fills in <code>http://127.0.0.1:8000</code> when the local API is running. Internet add-on choices will follow the selected internet plan. On GitHub Pages, deploy the API and paste its HTTPS address here. <a href="API_SETUP.md">See the free Render setup guide</a>.</p>
           <p class="prediction-status" id="prediction-api-status" role="status" aria-live="polite">Start the prediction API, then check the connection.</p>
           <form id="customer-prediction-form">
             <div class="prediction-fields">
