@@ -3,3 +3,4 @@ venv/
 __pycache__/
 .ipynb_checkpoints/
 .env
+models/churn_live_model.joblib
