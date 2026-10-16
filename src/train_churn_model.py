@@ -236,7 +236,7 @@ def main() -> None:
 
     features, labels, identifiers = load_dataset(args.csv)
     feature_columns = list(features.columns)
-    x_train, x_test, y_train, y_test, ids_test = train_test_split(
+    x_train, x_test, y_train, y_test, _ids_train, ids_test = train_test_split(
         features,
         labels,
         identifiers,
