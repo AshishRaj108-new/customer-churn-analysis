@@ -28,7 +28,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -245,34 +245,52 @@ def main() -> None:
         stratify=labels,
     )
 
-    preprocessor = build_preprocessor(feature_columns)
-    x_train_transformed = preprocessor.fit_transform(x_train)
-    x_test_transformed = preprocessor.transform(x_test)
-    background_size = min(max(1, args.shap_background_size), x_train_transformed.shape[0])
-    background = x_train_transformed[:background_size]
-
-    fitted_models: dict[str, Any] = {}
+    fold_splitter = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.random_state)
     model_results: dict[str, dict[str, Any]] = {}
-    for model_name, model in build_models(args.random_state).items():
-        model.fit(x_train_transformed, y_train)
-        probabilities, predictions, metrics = evaluate_model(model, x_test_transformed, y_test)
-        fitted_models[model_name] = model
+    for model_name, classifier in build_models(args.random_state).items():
+        pipeline = Pipeline(
+            steps=[
+                ("preprocessor", build_preprocessor(feature_columns)),
+                ("classifier", classifier),
+            ]
+        )
+        validation_scores = cross_validate(
+            pipeline,
+            x_train,
+            y_train,
+            cv=fold_splitter,
+            scoring={"rocAuc": "roc_auc", "f1": "f1"},
+            n_jobs=1,
+            error_score="raise",
+        )
+        pipeline.fit(x_train, y_train)
+        probabilities, predictions, metrics = evaluate_model(pipeline, x_test, y_test)
         model_results[model_name] = {
+            "pipeline": pipeline,
             "probabilities": probabilities,
             "predictions": predictions,
             "metrics": metrics,
+            "validation": {
+                "rocAuc": round(float(np.mean(validation_scores["test_rocAuc"])), 4),
+                "f1": round(float(np.mean(validation_scores["test_f1"])), 4),
+            },
         }
 
     best_name = max(
         model_results,
         key=lambda name: (
-            model_results[name]["metrics"]["rocAuc"],
-            model_results[name]["metrics"]["f1"],
-            model_results[name]["metrics"]["accuracy"],
+            model_results[name]["validation"]["rocAuc"],
+            model_results[name]["validation"]["f1"],
         ),
     )
-    best_model = fitted_models[best_name]
     best_result = model_results[best_name]
+    best_pipeline = best_result["pipeline"]
+    preprocessor = best_pipeline.named_steps["preprocessor"]
+    best_model = best_pipeline.named_steps["classifier"]
+    x_train_transformed = preprocessor.transform(x_train)
+    x_test_transformed = preprocessor.transform(x_test)
+    background_size = min(max(1, args.shap_background_size), x_train_transformed.shape[0])
+    background = x_train_transformed[:background_size]
 
     if best_name == "Logistic Regression":
         explainer = shap.LinearExplainer(best_model, background)
@@ -286,13 +304,14 @@ def main() -> None:
         {
             "model": name,
             "selected": name == best_name,
+            "validation": result["validation"],
             "metrics": result["metrics"],
         }
         for name, result in sorted(
             model_results.items(),
             key=lambda item: (
-                item[1]["metrics"]["rocAuc"],
-                item[1]["metrics"]["f1"],
+                item[1]["validation"]["rocAuc"],
+                item[1]["validation"]["f1"],
             ),
             reverse=True,
         )
@@ -303,10 +322,11 @@ def main() -> None:
         "target": "Churn",
         "positiveClass": "Yes",
         "threshold": 0.5,
-        "selectionRule": "Highest held-out ROC-AUC; F1 score breaks ties.",
+        "selectionRule": "Highest mean 5-fold ROC-AUC on training data; mean F1 breaks ties.",
         "modelComparison": comparison,
         "evaluation": {
             "method": f"{args.test_size:.0%} stratified holdout test set",
+            "selectionMethod": "5-fold stratified cross-validation on the training portion",
             "datasetRows": int(len(features)),
             "trainingRows": int(len(x_train)),
             "testRows": int(len(x_test)),
@@ -334,14 +354,16 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print("Model comparison (same held-out test set):")
+    print("Model comparison (5-fold CV selects; held-out test scores are final):")
     for result in comparison:
         metrics = result["metrics"]
+        validation = result["validation"]
         marker = "  <-- selected" if result["selected"] else ""
         print(
-            f"  {result['model']}: ROC-AUC={metrics['rocAuc']:.4f}, "
-            f"F1={metrics['f1']:.4f}, precision={metrics['precision']:.4f}, "
-            f"recall={metrics['recall']:.4f}, accuracy={metrics['accuracy']:.4f}{marker}"
+            f"  {result['model']}: CV ROC-AUC={validation['rocAuc']:.4f}, "
+            f"test ROC-AUC={metrics['rocAuc']:.4f}, test F1={metrics['f1']:.4f}, "
+            f"precision={metrics['precision']:.4f}, recall={metrics['recall']:.4f}, "
+            f"accuracy={metrics['accuracy']:.4f}{marker}"
         )
     print(f"Training rows: {output['evaluation']['trainingRows']}")
     print(f"Held-out test rows: {output['evaluation']['testRows']}")
