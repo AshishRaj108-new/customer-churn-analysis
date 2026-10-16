@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: ashish-customer-churn-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-api.txt && python src/train_churn_model.py
+    startCommand: python -m uvicorn src.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
