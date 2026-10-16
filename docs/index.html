@@ -816,6 +816,8 @@
     const predictionApiUrl = document.getElementById("prediction-api-url");
     if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
       predictionApiUrl.value = "http://127.0.0.1:8000";
+    } else {
+      predictionApiUrl.value = "https://ashish-customer-churn-api.onrender.com";
     }
     const predictionForm = document.getElementById("customer-prediction-form");
     const internetAddOns = ["OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"];
