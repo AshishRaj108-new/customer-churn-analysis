@@ -73,6 +73,13 @@
     .kpi:nth-child(1) .kpi-tag { color: #a7362b; background: #fff0ed; }
     .kpi:nth-child(2) .kpi-tag { color: #96600c; background: #fff4df; }
     .kpi:nth-child(3) .kpi-tag { color: #17627a; background: #e8f6fa; }
+    .ml-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; margin: 10px 0 2px; }
+    .ml-metric { min-width: 0; padding: 10px 11px; border: 1px solid var(--line); border-radius: 8px; background: #f8fbf9; }
+    .ml-metric span { display: block; color: var(--muted); font-size: 9px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
+    .ml-metric strong { display: block; margin-top: 4px; color: var(--forest); font-size: 20px; font-variant-numeric: tabular-nums; }
+    .ml-state { margin: 8px 0; color: var(--muted); font-size: 10px; }
+    .ml-reasons { min-width: 260px; max-width: 540px; white-space: normal; line-height: 1.45; }
+    .ml-score { color: #9b392e; font-weight: 750; font-variant-numeric: tabular-nums; }
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 22px 0 11px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
     .section-heading h2 { margin: 0; font-size: 13px; font-weight: 750; letter-spacing: -.01em; }
     .section-heading p { margin: 0; color: var(--muted); font-size: 10px; text-align: right; }
@@ -104,6 +111,7 @@
       .main { padding: 22px 20px; }
       .hero { padding: 21px; }
       .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ml-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .social a { padding: 7px 9px; }
     }
     @media (max-width: 760px) {
@@ -122,6 +130,7 @@
       .chart-card { grid-column: 1 / -1; }
       .section-heading { align-items: flex-start; flex-direction: column; }
       .section-heading p { text-align: left; }
+      .ml-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 430px) {
       .filters { grid-template-columns: 1fr 1fr; }
@@ -192,6 +201,27 @@
         <article class="kpi"><div class="kpi-label">Retained customers</div><strong class="kpi-value" id="kpi-retained">—</strong><p class="kpi-note" id="kpi-retained-note">Customers who stayed</p><span class="kpi-tag" id="kpi-retained-tag">Observed retention</span></article>
       </section>
 
+      <div class="section-heading"><h2>ML churn estimates &amp; explainable AI</h2><p>Model scores are evaluated on a separate test sample.</p></div>
+      <section class="charts" aria-label="Machine-learning churn estimates and explanations">
+        <article class="chart-card full">
+          <h3>Held-out model evaluation</h3>
+          <p class="chart-note">The model was trained on a separate training split. Metrics below describe only the held-out test records and stay fixed when dashboard filters change.</p>
+          <div class="ml-metrics" aria-live="polite">
+            <div class="ml-metric"><span>Precision</span><strong id="ml-precision">—</strong></div>
+            <div class="ml-metric"><span>Recall</span><strong id="ml-recall">—</strong></div>
+            <div class="ml-metric"><span>F1 score</span><strong id="ml-f1">—</strong></div>
+            <div class="ml-metric"><span>ROC-AUC</span><strong id="ml-roc-auc">—</strong></div>
+            <div class="ml-metric"><span>Test records</span><strong id="ml-test-count">—</strong></div>
+          </div>
+          <p class="ml-state" id="ml-state" role="status" aria-live="polite">Loading model results…</p>
+        </article>
+        <article class="chart-card full">
+          <h3>Highest model-estimated churn scores</h3>
+          <p class="chart-note">Rows come from the held-out test sample. SHAP (Explainable AI) factors describe how recorded features influenced the model score; they do not prove cause.</p>
+          <div class="table-wrap"><table><thead><tr><th scope="col">Customer ID</th><th scope="col">Estimated churn score</th><th scope="col">Model label</th><th scope="col">Recorded outcome</th><th scope="col">Top model factors</th></tr></thead><tbody id="ml-risk-body"><tr><td colspan="5" class="table-empty">Loading held-out predictions…</td></tr></tbody></table></div>
+        </article>
+      </section>
+
       <div class="section-heading"><h2>Churn by customer segment</h2><p>Rates and counts update with the filters.</p></div>
       <section class="charts" aria-label="Customer segment churn charts">
         <article class="chart-card"><h3>Churn rate by contract type</h3><p class="chart-note" id="contract-note">Historical churn by contract, calculated from the selected customers.</p><div class="chart-stage"><canvas id="contract-chart" role="img" aria-label="Bar chart of churn rates by contract type"></canvas><div class="empty-state" hidden></div></div></article>
@@ -219,11 +249,13 @@
   <script>
     "use strict";
     const DATA_URL = "../data/WA_Fn-UseC_-Telco-Customer-Churn.csv";
+    const ML_URL = "./data/ml_predictions.json";
     const USD_TO_INR = 95.07; // RBI reference rate snapshot for 15 Oct 2026
     const COLORS = { green: "#16815f", greenSoft: "#69aa8e", red: "#c43e32", amber: "#d99012", ink: "#30493d", muted: "#6b8178", grid: "#e8efea" };
     const SERVICE_FIELDS = ["PhoneService", "MultipleLines", "OnlineSecurity", "OnlineBackup", "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"];
     const charts = {};
     let allCustomers = [];
+    let mlResults = null;
 
     function parseCSV(text) {
       const rows = [];
@@ -494,6 +526,37 @@
       }
       tbody.innerHTML = priority.map(group => `<tr><td>${escapeHTML(group.contract)}</td><td>${escapeHTML(group.payment.replace(" (automatic)", " (auto)"))}</td><td>${group.total.toLocaleString()}</td><td><div class="rate-cell"><span class="rate-track" aria-hidden="true"><span class="rate-fill" style="display:block;width:${Math.max(0, Math.min(100, group.rate))}%"></span></span><strong>${percent(group.rate)}</strong></div></td></tr>`).join("");
     }
+    function renderModelResults(customers) {
+      const state = document.getElementById("ml-state");
+      const tbody = document.getElementById("ml-risk-body");
+      const metrics = mlResults?.evaluation?.metrics;
+      if (!mlResults || !metrics || !Array.isArray(mlResults.predictions)) {
+        ["ml-precision", "ml-recall", "ml-f1", "ml-roc-auc", "ml-test-count"].forEach(id => { document.getElementById(id).textContent = "—"; });
+        state.textContent = "Model results are unavailable. Run src/train_churn_model.py from the project root to generate docs/data/ml_predictions.json.";
+        tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No model predictions are available yet.</td></tr>';
+        return;
+      }
+      document.getElementById("ml-precision").textContent = `${(metrics.precision * 100).toFixed(1)}%`;
+      document.getElementById("ml-recall").textContent = `${(metrics.recall * 100).toFixed(1)}%`;
+      document.getElementById("ml-f1").textContent = `${(metrics.f1 * 100).toFixed(1)}%`;
+      document.getElementById("ml-roc-auc").textContent = `${(metrics.rocAuc * 100).toFixed(1)}%`;
+      document.getElementById("ml-test-count").textContent = Number(mlResults.evaluation.testRows).toLocaleString();
+      state.textContent = `${mlResults.model} · ${mlResults.evaluation.method} · Predictions shown here are historical test examples, not live customer forecasts.`;
+
+      const selectedIds = new Set(customers.map(customer => customer.customerID));
+      const topRows = mlResults.predictions
+        .filter(row => selectedIds.has(row.customerID))
+        .sort((a, b) => b.churnProbability - a.churnProbability)
+        .slice(0, 10);
+      if (!topRows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No held-out test records match these filters.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = topRows.map(row => {
+        const reasons = (row.topReasons || []).map(reason => `${reason.feature}: ${reason.value} (${reason.direction} model-estimated risk)`).join("; ");
+        return `<tr><td>${escapeHTML(row.customerID)}</td><td class="ml-score">${percent(row.churnProbability * 100)}</td><td>${escapeHTML(row.predictedChurn)}</td><td>${escapeHTML(row.observedChurn)}</td><td class="ml-reasons">${escapeHTML(reasons || "No explanation available")}</td></tr>`;
+      }).join("");
+    }
     function render() {
       const customers = selectedCustomers();
       document.getElementById("hero-meta").textContent = `Showing ${customers.length.toLocaleString()} of ${allCustomers.length.toLocaleString()} customers · Dataset: Telco Customer Churn`;
@@ -507,6 +570,7 @@
       renderCharges(customers);
       renderServices(customers);
       renderPriority(customers);
+      renderModelResults(customers);
     }
     async function loadData() {
       const state = document.getElementById("data-state");
@@ -515,6 +579,16 @@
         if (!response.ok) throw new Error(`Dataset request returned ${response.status}`);
         allCustomers = parseCSV(await response.text());
         if (!allCustomers.length) throw new Error("The CSV was found, but it did not contain readable customer rows.");
+        try {
+          const modelResponse = await fetch(ML_URL, { cache: "no-store" });
+          if (!modelResponse.ok) throw new Error(`Model results request returned ${modelResponse.status}`);
+          const modelData = await modelResponse.json();
+          if (!Array.isArray(modelData.predictions) || !modelData.evaluation?.metrics) throw new Error("Model results file has an unexpected format.");
+          mlResults = modelData;
+        } catch (error) {
+          mlResults = null;
+          console.warn("Could not load churn-model results:", error);
+        }
         setSelectOptions("filter-contract", [...new Set(allCustomers.map(customer => customer.Contract))].sort(), "All contracts");
         setSelectOptions("filter-internet", [...new Set(allCustomers.map(customer => customer.InternetService))].sort(), "All services");
         setSelectOptions("filter-payment", [...new Set(allCustomers.map(customer => customer.PaymentMethod))].sort(), "All methods");
@@ -537,3 +611,4 @@
   </script>
 </body>
 </html>
+
